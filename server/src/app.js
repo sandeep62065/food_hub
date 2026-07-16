@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
 const xssClean = require('xss-clean');
+const path = require('path');
 const { generalLimiter } = require('./middlewares/rateLimiter');
 const errorHandler = require('./middlewares/errorHandler');
 
@@ -61,10 +62,19 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'FoodieHub API is running', timestamp: new Date().toISOString() });
 });
 
-// 404
-app.use('*', (req, res) => {
-  res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
-});
+// Serve static assets in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../../client/dist')));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../../client', 'dist', 'index.html'));
+  });
+} else {
+  // 404 for API routes in development (or if static files not found)
+  app.use('*', (req, res) => {
+    res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
+  });
+}
 
 // Error handler (must be last)
 app.use(errorHandler);

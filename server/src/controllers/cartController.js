@@ -40,7 +40,7 @@ const addToCart = async (req, res, next) => {
     }
 
     // Enforce single restaurant per cart
-    if (cart.restaurant && cart.restaurant.toString() !== food.restaurant._id.toString()) {
+    if (cart.items.length > 0 && cart.restaurant && cart.restaurant.toString() !== food.restaurant._id.toString()) {
       return res.status(409).json({
         success: false,
         message: 'Your cart has items from another restaurant. Clear cart to add items from this restaurant.',
