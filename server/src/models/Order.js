@@ -12,6 +12,11 @@ const orderSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     restaurant: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant', required: true },
+    deliveryPartner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    partnerLocation: {
+      lat: { type: Number },
+      lng: { type: Number }
+    },
     items: [orderItemSchema],
     deliveryAddress: {
       label: { type: String },

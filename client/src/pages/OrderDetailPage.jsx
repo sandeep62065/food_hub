@@ -7,6 +7,27 @@ import { formatCurrency, formatDate } from '../utils';
 import { ORDER_STATUSES } from '../constants';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
+import { useEffect, useRef, useState as useReactState } from 'react';
+import { io } from 'socket.io-client';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix leaflet default icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+function MapUpdater({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center) map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
+}
 
 export default function OrderDetailPage() {
   const { id } = useParams();
@@ -14,6 +35,34 @@ export default function OrderDetailPage() {
   const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  
+  const [partnerLocation, setPartnerLocation] = useState(null);
+  const socketRef = useRef(null);
+
+  const order = data?.data;
+
+  useEffect(() => {
+    if (order?.orderStatus === 'out_for_delivery' || order?.orderStatus === 'preparing') {
+      const socketUrl = import.meta.env.VITE_API_URL 
+        ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
+        : 'http://localhost:5000';
+      
+      socketRef.current = io(socketUrl);
+      socketRef.current.emit('join-order', id);
+      
+      socketRef.current.on('location-updated', (loc) => {
+        setPartnerLocation({ lat: loc.lat, lng: loc.lng });
+      });
+
+      if (order.partnerLocation?.lat) {
+        setPartnerLocation(order.partnerLocation);
+      }
+    }
+    
+    return () => {
+      if (socketRef.current) socketRef.current.disconnect();
+    };
+  }, [order?.orderStatus, id, order?.partnerLocation]);
 
   if (isLoading) {
     return (
@@ -128,9 +177,36 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Status Timeline */}
-          <div className="card p-6">
-            <h2 className="font-heading font-semibold text-lg text-gray-900 dark:text-white mb-6">Order Progress</h2>
-            <OrderStatusTimeline status={order.orderStatus} statusHistory={order.statusHistory} />
+          <div className="space-y-6">
+            <div className="card p-6">
+              <h2 className="font-heading font-semibold text-lg text-gray-900 dark:text-white mb-6">Order Progress</h2>
+              <OrderStatusTimeline status={order.orderStatus} statusHistory={order.statusHistory} />
+            </div>
+
+            {/* Live Tracking Map */}
+            {order.orderStatus === 'out_for_delivery' && (
+              <div className="card p-6 overflow-hidden flex flex-col h-80 relative">
+                <h2 className="font-heading font-semibold text-lg text-gray-900 dark:text-white mb-4">Live Tracking</h2>
+                <div className="flex-1 bg-gray-100 rounded-lg overflow-hidden relative">
+                  {partnerLocation ? (
+                    <MapContainer center={[partnerLocation.lat, partnerLocation.lng]} zoom={15} style={{ height: '100%', width: '100%' }}>
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <Marker position={[partnerLocation.lat, partnerLocation.lng]}>
+                        <Popup>Delivery Partner is here</Popup>
+                      </Marker>
+                      <MapUpdater center={[partnerLocation.lat, partnerLocation.lng]} />
+                    </MapContainer>
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-gray-500 flex flex-col items-center gap-2">
+                        <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                        Connecting to partner GPS...
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

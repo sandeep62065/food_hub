@@ -40,6 +40,11 @@ export const ROUTES = {
   OWNER_FOODS_EDIT: '/owner/foods/:id/edit',
   OWNER_ORDERS: '/owner/orders',
   OWNER_REVIEWS: '/owner/reviews',
+  
+  // Delivery
+  DELIVERY: '/delivery',
+  DELIVERY_DASHBOARD: '/delivery/dashboard',
+  DELIVERY_ORDER: '/delivery/order/:id',
 };
 
 export const ORDER_STATUSES = {
@@ -55,6 +60,7 @@ export const ROLES = {
   CUSTOMER: 'customer',
   OWNER: 'owner',
   ADMIN: 'admin',
+  DELIVERY_PARTNER: 'delivery_partner',
 };
 
 export const PAYMENT_METHODS = {

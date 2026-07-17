@@ -7,8 +7,12 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: [true, 'Email is required'], unique: true, lowercase: true, trim: true },
     password: { type: String, required: [true, 'Password is required'], minlength: 6, select: false },
     phone: { type: String, trim: true },
-    role: { type: String, enum: ['customer', 'owner', 'admin'], default: 'customer' },
+    role: { type: String, enum: ['customer', 'owner', 'admin', 'delivery_partner'], default: 'customer' },
     avatarUrl: { type: String, default: '' },
+    currentLocation: {
+      lat: { type: Number },
+      lng: { type: Number }
+    },
     isVerified: { type: Boolean, default: false },
     isBanned: { type: Boolean, default: false },
     refreshToken: { type: String, select: false },

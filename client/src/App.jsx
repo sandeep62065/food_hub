@@ -43,6 +43,11 @@ import OwnerFoodsPage from './pages/owner/OwnerFoodsPage';
 import AddFoodPage from './pages/owner/AddFoodPage';
 import CreateRestaurantPage from './pages/owner/CreateRestaurantPage';
 
+// Delivery Pages
+import DeliveryLayout from './layouts/DeliveryLayout';
+import DeliveryDashboardPage from './pages/delivery/DeliveryDashboardPage';
+import ActiveDeliveryPage from './pages/delivery/ActiveDeliveryPage';
+
 export default function App() {
   const dispatch = useDispatch();
   const [initFinished, setInitFinished] = useState(false);
@@ -147,6 +152,13 @@ export default function App() {
           <Route path="/owner/create-restaurant" element={<CreateRestaurantPage />} />
           {/* Placeholders */}
           <Route path={ROUTES.OWNER_REVIEWS} element={<div className="p-8"><h1 className="text-2xl font-bold">Reviews</h1></div>} />
+        </Route>
+
+        {/* Delivery Routes */}
+        <Route element={<DeliveryLayout />}>
+          <Route path={ROUTES.DELIVERY} element={<Navigate to={ROUTES.DELIVERY_DASHBOARD} replace />} />
+          <Route path={ROUTES.DELIVERY_DASHBOARD} element={<DeliveryDashboardPage />} />
+          <Route path={ROUTES.DELIVERY_ORDER} element={<ActiveDeliveryPage />} />
         </Route>
 
         {/* Fallback 404 */}

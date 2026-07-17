@@ -18,6 +18,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const deliveryRoutes = require('./routes/deliveryRoutes');
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/cart', cartRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/delivery', deliveryRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
