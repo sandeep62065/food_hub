@@ -34,6 +34,7 @@ import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminRestaurantsPage from './pages/admin/AdminRestaurantsPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
+import AdminFoodsPage from './pages/admin/AdminFoodsPage';
 
 // Owner Pages
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage';
@@ -131,7 +132,7 @@ export default function App() {
           <Route path={ROUTES.ADMIN_ORDERS} element={<AdminOrdersPage />} />
           <Route path={ROUTES.ADMIN_CATEGORIES} element={<AdminCategoriesPage />} />
           {/* Placeholders for others */}
-          <Route path={ROUTES.ADMIN_FOODS} element={<div className="p-8"><h1 className="text-2xl font-bold">All Foods</h1></div>} />
+          <Route path={ROUTES.ADMIN_FOODS} element={<AdminFoodsPage />} />
           <Route path={ROUTES.ADMIN_COUPONS} element={<div className="p-8"><h1 className="text-2xl font-bold">Coupons</h1></div>} />
         </Route>
 

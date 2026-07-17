@@ -82,9 +82,13 @@ export const adminApi = apiSlice.injectEndpoints({
       query: (params) => ({ url: '/admin/orders', params }),
       providesTags: ['Order'],
     }),
+    getAdminFoods: builder.query({
+      query: (params) => ({ url: '/admin/foods', params }),
+      providesTags: ['Food'],
+    }),
   }),
 });
 
 export const { useGetCategoriesQuery, useCreateCategoryMutation, useUpdateCategoryMutation, useDeleteCategoryMutation } = categoryApi;
 export const { useGetMeQuery, useUpdateMeMutation, useChangePasswordMutation, useGetAddressesQuery, useAddAddressMutation, useUpdateAddressMutation, useDeleteAddressMutation } = userApi;
-export const { useGetAdminStatsQuery, useGetAdminUsersQuery, useToggleBanMutation, useGetAdminRestaurantsQuery, useUpdateRestaurantApprovalMutation, useDeleteRestaurantMutation, useGetAdminOrdersQuery } = adminApi;
+export const { useGetAdminStatsQuery, useGetAdminUsersQuery, useToggleBanMutation, useGetAdminRestaurantsQuery, useUpdateRestaurantApprovalMutation, useDeleteRestaurantMutation, useGetAdminOrdersQuery, useGetAdminFoodsQuery } = adminApi;

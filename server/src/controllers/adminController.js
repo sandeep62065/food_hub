@@ -162,4 +162,31 @@ const deleteRestaurant = async (req, res, next) => {
   }
 };
 
-module.exports = { getDashboardStats, getAllUsers, toggleBan, getAllRestaurants, updateRestaurantApproval, getAllOrders, deleteRestaurant };
+// @desc   Get all foods (admin)
+// @route  GET /api/v1/admin/foods
+const getAllFoods = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+    if (req.query.search) filter.name = new RegExp(req.query.search, 'i');
+    if (req.query.isAvailable !== undefined) filter.isAvailable = req.query.isAvailable === 'true';
+
+    const foods = await Food.find(filter)
+      .populate('restaurant', 'name')
+      .populate('category', 'name')
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limit);
+      
+    const total = await Food.countDocuments(filter);
+
+    res.json({ success: true, data: foods, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getDashboardStats, getAllUsers, toggleBan, getAllRestaurants, updateRestaurantApproval, getAllOrders, deleteRestaurant, getAllFoods };

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getDashboardStats, getAllUsers, toggleBan, getAllRestaurants, updateRestaurantApproval, getAllOrders, deleteRestaurant,
+  getDashboardStats, getAllUsers, toggleBan, getAllRestaurants, updateRestaurantApproval, getAllOrders, deleteRestaurant, getAllFoods
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middlewares/auth');
 
@@ -17,5 +17,7 @@ router.patch('/restaurants/:id/approval', updateRestaurantApproval);
 router.delete('/restaurants/:id', deleteRestaurant);
 
 router.get('/orders', getAllOrders);
+
+router.get('/foods', getAllFoods);
 
 module.exports = router;
