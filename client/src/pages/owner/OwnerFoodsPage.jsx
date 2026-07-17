@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Trash2, Search, Edit } from 'lucide-react';
 import { useGetOwnerFoodsQuery, useDeleteFoodMutation } from '../../redux/api/foodApi';
 import { Link } from 'react-router-dom';
+import { formatCurrency } from '../../utils';
 import toast from 'react-hot-toast';
 
 export default function OwnerFoodsPage() {
@@ -90,8 +91,8 @@ export default function OwnerFoodsPage() {
                   </td>
                   <td className="px-6 py-4 text-gray-500">{food.category?.name || '-'}</td>
                   <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                    ${food.discountPrice || food.price}
-                    {food.discountPrice && <span className="text-xs line-through text-gray-400 ml-2">${food.price}</span>}
+                    {formatCurrency(food.discountPrice || food.price)}
+                    {food.discountPrice && <span className="text-xs line-through text-gray-400 ml-2">{formatCurrency(food.price)}</span>}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`badge ${food.isAvailable ? 'badge-success' : 'badge-neutral'}`}>
