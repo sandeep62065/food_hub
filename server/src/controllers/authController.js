@@ -23,7 +23,7 @@ const register = async (req, res, next) => {
     }
 
     // Prevent creating admin via API
-    const allowedRoles = ['customer', 'owner'];
+    const allowedRoles = ['customer', 'owner', 'delivery_partner'];
     const userRole = allowedRoles.includes(role) ? role : 'customer';
 
     const user = await User.create({ name, email, password, phone, role: userRole });
