@@ -2,7 +2,7 @@ import { Outlet, Navigate, NavLink, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Map, LogOut, LayoutDashboard } from 'lucide-react';
 import { ROLES, ROUTES } from '../constants';
-import { clearCredentials } from '../redux/slices/authSlice';
+import { logout } from '../redux/slices/authSlice';
 import toast from 'react-hot-toast';
 
 export default function DeliveryLayout() {
@@ -15,7 +15,7 @@ export default function DeliveryLayout() {
   }
 
   const handleLogout = () => {
-    dispatch(clearCredentials());
+    dispatch(logout());
     toast.success('Logged out successfully');
     navigate(ROUTES.HOME);
   };
