@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
-import { UtensilsCrossed, User, Mail, Lock, Phone, Eye, EyeOff, ArrowRight, ChefHat } from 'lucide-react';
+import { UtensilsCrossed, User, Mail, Lock, Phone, Eye, EyeOff, ArrowRight, ChefHat, Bike } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCredentials, selectIsAuthenticated } from '../redux/slices/authSlice';
 import { useRegisterMutation } from '../redux/api/authApi';
@@ -17,7 +17,7 @@ const schema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
   phone: z.string().optional(),
-  role: z.enum(['customer', 'owner']),
+  role: z.enum(['customer', 'owner', 'delivery_partner']),
 }).refine((d) => d.password === d.confirmPassword, {
   message: 'Passwords do not match',
   path: ['confirmPassword'],
@@ -47,7 +47,9 @@ export default function RegisterPage() {
       const result = await register(submitData).unwrap();
       dispatch(setCredentials({ user: result.data.user, accessToken: result.data.accessToken }));
       toast.success(`Welcome to FoodieHub, ${result.data.user.name.split(' ')[0]}! 🎉`);
-      navigate(result.data.user.role === 'owner' ? '/owner/dashboard' : '/');
+      if (result.data.user.role === 'owner') navigate('/owner/dashboard');
+      else if (result.data.user.role === 'delivery_partner') navigate('/delivery/dashboard');
+      else navigate('/');
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
@@ -81,7 +83,8 @@ export default function RegisterPage() {
           <div className="flex gap-2 p-1 bg-gray-100 dark:bg-dark-700 rounded-xl mb-6">
             {[
               { value: 'customer', label: 'Customer', icon: User },
-              { value: 'owner', label: 'Restaurant Owner', icon: ChefHat },
+              { value: 'owner', label: 'Owner', icon: ChefHat },
+              { value: 'delivery_partner', label: 'Delivery', icon: Bike },
             ].map(({ value, label, icon: Icon }) => (
               <label
                 key={value}
