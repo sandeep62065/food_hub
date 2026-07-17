@@ -61,6 +61,18 @@ export default function ActiveDeliveryPage() {
     socketRef.current.emit('join-order', id);
 
     setIsTracking(true);
+    
+    // Force initial location update for desktop users
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude: lat, longitude: lng } = position.coords;
+        setCurrentLocation({ lat, lng });
+        socketRef.current.emit('update-location', { orderId: id, lat, lng });
+      },
+      (err) => console.error('Initial location error:', err),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+
     watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
         const { latitude: lat, longitude: lng } = position.coords;
