@@ -68,6 +68,7 @@ export default function Navbar() {
   const getDashboardLink = () => {
     if (user?.role === 'admin') return ROUTES.ADMIN_DASHBOARD;
     if (user?.role === 'owner') return ROUTES.OWNER_DASHBOARD;
+    if (user?.role === 'delivery_partner') return ROUTES.DELIVERY_DASHBOARD;
     return ROUTES.PROFILE;
   };
 
@@ -171,7 +172,7 @@ export default function Navbar() {
                       className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors"
                     >
                       <LayoutDashboard className="w-4 h-4" />
-                      {user?.role === 'admin' ? 'Admin Dashboard' : user?.role === 'owner' ? 'Owner Dashboard' : 'My Profile'}
+                      {user?.role === 'admin' ? 'Admin Dashboard' : user?.role === 'owner' ? 'Owner Dashboard' : user?.role === 'delivery_partner' ? 'Delivery Dashboard' : 'My Profile'}
                     </Link>
 
                     {user?.role === 'customer' && (
