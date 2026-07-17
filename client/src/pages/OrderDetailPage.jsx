@@ -31,7 +31,7 @@ function MapUpdater({ center }) {
 
 export default function OrderDetailPage() {
   const { id } = useParams();
-  const { data, isLoading } = useGetOrderQuery(id);
+  const { data, isLoading } = useGetOrderQuery(id, { pollingInterval: 5000 });
   const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -42,6 +42,7 @@ export default function OrderDetailPage() {
   const order = data?.data;
 
   useEffect(() => {
+    // Keep socket logic as secondary fallback/realtime booster if Vercel somehow allows it
     if (order?.orderStatus === 'out_for_delivery' || order?.orderStatus === 'preparing') {
       const socketUrl = import.meta.env.VITE_API_URL 
         ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
@@ -53,16 +54,19 @@ export default function OrderDetailPage() {
       socketRef.current.on('location-updated', (loc) => {
         setPartnerLocation({ lat: loc.lat, lng: loc.lng });
       });
-
-      if (order.partnerLocation?.lat) {
-        setPartnerLocation(order.partnerLocation);
-      }
     }
     
     return () => {
       if (socketRef.current) socketRef.current.disconnect();
     };
-  }, [order?.orderStatus, id, order?.partnerLocation]);
+  }, [order?.orderStatus, id]);
+
+  // Update from DB polling
+  useEffect(() => {
+    if (order?.partnerLocation?.lat) {
+      setPartnerLocation(order.partnerLocation);
+    }
+  }, [order?.partnerLocation]);
 
   if (isLoading) {
     return (

@@ -4,7 +4,8 @@ const {
   getAvailableOrders,
   getMyDeliveries,
   acceptOrder,
-  updateOrderStatus
+  updateOrderStatus,
+  updateLocation
 } = require('../controllers/deliveryController');
 const { protect, authorize } = require('../middlewares/auth');
 
@@ -15,5 +16,6 @@ router.get('/orders/available', getAvailableOrders);
 router.get('/orders/my', getMyDeliveries);
 router.patch('/orders/:id/accept', acceptOrder);
 router.patch('/orders/:id/status', updateOrderStatus);
+router.patch('/orders/:id/location', updateLocation);
 
 module.exports = router;

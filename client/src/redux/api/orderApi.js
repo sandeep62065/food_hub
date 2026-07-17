@@ -13,6 +13,7 @@ export const orderApi = apiSlice.injectEndpoints({
     getOrder: builder.query({
       query: (id) => ({ url: `/orders/${id}` }),
       providesTags: (result, error, id) => [{ type: 'Order', id }],
+      pollingInterval: 3000,
     }),
     cancelOrder: builder.mutation({
       query: ({ id, reason }) => ({ url: `/orders/${id}/cancel`, method: 'PATCH', data: { reason } }),

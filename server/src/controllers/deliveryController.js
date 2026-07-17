@@ -85,9 +85,41 @@ const updateOrderStatus = async (req, res, next) => {
   }
 };
 
+// @desc    Update delivery location
+// @route   PATCH /api/v1/delivery/orders/:id/location
+const updateLocation = async (req, res, next) => {
+  try {
+    const { lat, lng } = req.body;
+    if (!lat || !lng) {
+      return next(new AppError('Latitude and longitude are required', 400));
+    }
+
+    const order = await Order.findOneAndUpdate(
+      { _id: req.params.id, deliveryPartner: req.user._id },
+      { partnerLocation: { lat, lng } },
+      { new: true }
+    );
+
+    if (!order) {
+      return next(new AppError('Order not found or not assigned to you', 404));
+    }
+
+    // Still try to emit via socket for fast updates if it works locally
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`order_${order._id}`).emit('location-updated', { lat, lng });
+    }
+
+    res.json({ success: true, message: 'Location updated' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAvailableOrders,
   getMyDeliveries,
   acceptOrder,
-  updateOrderStatus
+  updateOrderStatus,
+  updateLocation
 };

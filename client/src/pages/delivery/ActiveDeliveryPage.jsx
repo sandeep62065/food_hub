@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGetMyDeliveriesQuery, useUpdateDeliveryOrderStatusMutation } from '../../redux/api/deliveryApi';
+import { useGetMyDeliveriesQuery, useUpdateDeliveryOrderStatusMutation, useUpdateDeliveryLocationMutation } from '../../redux/api/deliveryApi';
 import { io } from 'socket.io-client';
 import { MapPin, Navigation, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -30,6 +30,7 @@ export default function ActiveDeliveryPage() {
   const navigate = useNavigate();
   const { data, isLoading } = useGetMyDeliveriesQuery();
   const [updateStatus, { isLoading: isUpdating }] = useUpdateDeliveryOrderStatusMutation();
+  const [updateLocation] = useUpdateDeliveryLocationMutation();
 
   const [currentLocation, setCurrentLocation] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
@@ -68,6 +69,7 @@ export default function ActiveDeliveryPage() {
         const { latitude: lat, longitude: lng } = position.coords;
         setCurrentLocation({ lat, lng });
         socketRef.current.emit('update-location', { orderId: id, lat, lng });
+        updateLocation({ id, lat, lng });
       },
       (err) => console.error('Initial location error:', err),
       { enableHighAccuracy: true, timeout: 10000 }
@@ -78,6 +80,7 @@ export default function ActiveDeliveryPage() {
         const { latitude: lat, longitude: lng } = position.coords;
         setCurrentLocation({ lat, lng });
         socketRef.current.emit('update-location', { orderId: id, lat, lng });
+        updateLocation({ id, lat, lng });
       },
       (error) => {
         console.error('Error tracking location', error);
