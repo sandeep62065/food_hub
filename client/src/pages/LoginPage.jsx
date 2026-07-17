@@ -120,7 +120,15 @@ export default function LoginPage() {
             <Link to="/register" className="text-primary-500 font-semibold hover:underline">Create one free</Link>
           </p>
 
-
+          {/* Demo accounts */}
+          <div className="mt-8 p-4 bg-gray-50 dark:bg-dark-800 rounded-xl border border-gray-200 dark:border-dark-600">
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3">🧪 Demo Accounts</p>
+            <div className="space-y-1.5 text-xs text-gray-600 dark:text-gray-300">
+              <p><strong>Admin:</strong> admin@foodiehub.com / Admin@123</p>
+              <p><strong>Owner:</strong> owner@foodiehub.com / Owner@123</p>
+              <p><strong>Customer:</strong> customer@foodiehub.com / Customer@123</p>
+            </div>
+          </div>
         </motion.div>
       </div>
 
