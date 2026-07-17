@@ -90,7 +90,7 @@ export default function OrderDetailPage() {
     );
   }
 
-  const order = data.data;
+
   const statusInfo = ORDER_STATUSES[order.orderStatus];
   const canCancel = ['placed', 'confirmed'].includes(order.orderStatus);
 
