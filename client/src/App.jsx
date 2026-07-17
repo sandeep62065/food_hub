@@ -39,6 +39,7 @@ import AdminFoodsPage from './pages/admin/AdminFoodsPage';
 // Owner Pages
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage';
 import OwnerOrdersPage from './pages/owner/OwnerOrdersPage';
+import OwnerFoodsPage from './pages/owner/OwnerFoodsPage';
 import AddFoodPage from './pages/owner/AddFoodPage';
 import CreateRestaurantPage from './pages/owner/CreateRestaurantPage';
 
@@ -141,6 +142,7 @@ export default function App() {
           <Route path={ROUTES.OWNER} element={<Navigate to={ROUTES.OWNER_DASHBOARD} replace />} />
           <Route path={ROUTES.OWNER_DASHBOARD} element={<OwnerDashboardPage />} />
           <Route path={ROUTES.OWNER_ORDERS} element={<OwnerOrdersPage />} />
+          <Route path={ROUTES.OWNER_FOODS} element={<OwnerFoodsPage />} />
           <Route path={ROUTES.OWNER_FOODS_ADD} element={<AddFoodPage />} />
           <Route path="/owner/create-restaurant" element={<CreateRestaurantPage />} />
           {/* Placeholders */}

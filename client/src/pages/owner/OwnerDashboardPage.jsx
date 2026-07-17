@@ -3,7 +3,7 @@ import { ShoppingBag, Star, TrendingUp, UtensilsCrossed, PlusCircle, Store } fro
 import { Link } from 'react-router-dom';
 import { useGetMyRestaurantQuery } from '../../redux/api/restaurantApi';
 import { useGetRestaurantOrdersQuery } from '../../redux/api/orderApi';
-import { useGetFoodsByRestaurantQuery } from '../../redux/api/foodApi';
+import { useGetOwnerFoodsQuery } from '../../redux/api/foodApi';
 import { formatCurrency } from '../../utils';
 import { ORDER_STATUSES } from '../../constants';
 
@@ -12,7 +12,7 @@ export default function OwnerDashboardPage() {
   const restaurant = restaurantData?.data;
 
   const { data: ordersData } = useGetRestaurantOrdersQuery({ limit: 5 }, { skip: !restaurant });
-  const { data: foodsData } = useGetFoodsByRestaurantQuery(restaurant?._id, { skip: !restaurant });
+  const { data: foodsData } = useGetOwnerFoodsQuery({}, { skip: !restaurant });
 
   const orders = ordersData?.data || [];
   const foods = foodsData?.data || [];
@@ -59,21 +59,33 @@ export default function OwnerDashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { icon: ShoppingBag, label: 'Pending Orders', value: pendingOrders, color: 'bg-amber-500' },
-          { icon: UtensilsCrossed, label: 'Food Items', value: foods.length, color: 'bg-blue-500' },
+          { icon: ShoppingBag, label: 'Pending Orders', value: pendingOrders, color: 'bg-amber-500', link: '/owner/orders' },
+          { icon: UtensilsCrossed, label: 'Food Items', value: foods.length, color: 'bg-blue-500', link: '/owner/foods' },
           { icon: Star, label: 'Avg Rating', value: restaurant.avgRating?.toFixed(1) || '—', color: 'bg-yellow-500' },
           { icon: TrendingUp, label: "Today's Revenue", value: formatCurrency(todayRevenue), color: 'bg-green-500' },
-        ].map(({ icon: Icon, label, value, color }, i) => (
+        ].map(({ icon: Icon, label, value, color, link }, i) => (
           <motion.div key={label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-            <div className="card p-5 flex items-center gap-3">
-              <div className={`w-10 h-10 ${color} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                <Icon className="w-5 h-5 text-white" />
+            {link ? (
+              <Link to={link} className="card p-5 flex items-center gap-3 hover:shadow-card-hover transition-shadow block">
+                <div className={`w-10 h-10 ${color} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+                  <p className="font-heading font-bold text-xl text-gray-900 dark:text-white">{value}</p>
+                </div>
+              </Link>
+            ) : (
+              <div className="card p-5 flex items-center gap-3">
+                <div className={`w-10 h-10 ${color} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+                  <p className="font-heading font-bold text-xl text-gray-900 dark:text-white">{value}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
-                <p className="font-heading font-bold text-xl text-gray-900 dark:text-white">{value}</p>
-              </div>
-            </div>
+            )}
           </motion.div>
         ))}
       </div>

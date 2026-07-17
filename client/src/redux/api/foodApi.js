@@ -15,6 +15,10 @@ export const foodApi = apiSlice.injectEndpoints({
       query: (restaurantId) => ({ url: `/foods/restaurant/${restaurantId}` }),
       providesTags: ['Food'],
     }),
+    getOwnerFoods: builder.query({
+      query: (params) => ({ url: '/foods/owner/my-foods', params }),
+      providesTags: ['Food'],
+    }),
     addFood: builder.mutation({
       query: (data) => ({ url: '/foods', method: 'POST', data, headers: { 'Content-Type': 'multipart/form-data' } }),
       invalidatesTags: ['Food'],
@@ -85,5 +89,5 @@ export const cartApi = apiSlice.injectEndpoints({
   }),
 });
 
-export const { useGetFoodsQuery, useGetFoodQuery, useGetFoodsByRestaurantQuery, useAddFoodMutation, useUpdateFoodMutation, useDeleteFoodMutation } = foodApi;
+export const { useGetFoodsQuery, useGetFoodQuery, useGetFoodsByRestaurantQuery, useGetOwnerFoodsQuery, useAddFoodMutation, useUpdateFoodMutation, useDeleteFoodMutation } = foodApi;
 export const { useGetCartQuery, useAddToCartMutation, useUpdateCartItemMutation, useRemoveCartItemMutation, useClearCartMutation } = cartApi;

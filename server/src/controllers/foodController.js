@@ -149,4 +149,25 @@ const getFoodsByRestaurant = async (req, res, next) => {
   }
 };
 
-module.exports = { getFoods, getFood, addFood, updateFood, deleteFood, getFoodsByRestaurant };
+// @desc   Get owner foods
+// @route  GET /api/v1/foods/owner/my-foods
+const getOwnerFoods = async (req, res, next) => {
+  try {
+    const restaurant = await Restaurant.findOne({ owner: req.user._id });
+    if (!restaurant) return next(new AppError('Restaurant not found', 404));
+
+    const filter = { restaurant: restaurant._id };
+    if (req.query.search) filter.name = new RegExp(req.query.search, 'i');
+    if (req.query.isAvailable !== undefined) filter.isAvailable = req.query.isAvailable === 'true';
+
+    const foods = await Food.find(filter)
+      .populate('category', 'name slug')
+      .sort('-createdAt');
+      
+    res.json({ success: true, data: foods });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getFoods, getFood, addFood, updateFood, deleteFood, getFoodsByRestaurant, getOwnerFoods };

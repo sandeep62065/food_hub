@@ -35,6 +35,7 @@ export const ROUTES = {
   // Owner
   OWNER: '/owner',
   OWNER_DASHBOARD: '/owner/dashboard',
+  OWNER_FOODS: '/owner/foods',
   OWNER_FOODS_ADD: '/owner/foods/add',
   OWNER_FOODS_EDIT: '/owner/foods/:id/edit',
   OWNER_ORDERS: '/owner/orders',
