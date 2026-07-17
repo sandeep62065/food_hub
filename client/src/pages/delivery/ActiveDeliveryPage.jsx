@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGetMyDeliveriesQuery, useUpdateOrderStatusMutation } from '../../redux/api/deliveryApi';
+import { useGetMyDeliveriesQuery, useUpdateDeliveryOrderStatusMutation } from '../../redux/api/deliveryApi';
 import { io } from 'socket.io-client';
 import { MapPin, Navigation, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -29,7 +29,7 @@ export default function ActiveDeliveryPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data, isLoading } = useGetMyDeliveriesQuery();
-  const [updateStatus, { isLoading: isUpdating }] = useUpdateOrderStatusMutation();
+  const [updateStatus, { isLoading: isUpdating }] = useUpdateDeliveryOrderStatusMutation();
 
   const [currentLocation, setCurrentLocation] = useState(null);
   const [isTracking, setIsTracking] = useState(false);

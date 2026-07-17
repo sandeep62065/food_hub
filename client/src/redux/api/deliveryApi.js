@@ -14,7 +14,7 @@ export const deliveryApi = apiSlice.injectEndpoints({
       query: (id) => ({ url: `/delivery/orders/${id}/accept`, method: 'PATCH' }),
       invalidatesTags: ['Order'],
     }),
-    updateOrderStatus: builder.mutation({
+    updateDeliveryOrderStatus: builder.mutation({
       query: ({ id, status }) => ({ url: `/delivery/orders/${id}/status`, method: 'PATCH', data: { status } }),
       invalidatesTags: ['Order'],
     }),
@@ -25,5 +25,5 @@ export const {
   useGetAvailableOrdersQuery,
   useGetMyDeliveriesQuery,
   useAcceptOrderMutation,
-  useUpdateOrderStatusMutation,
+  useUpdateDeliveryOrderStatusMutation,
 } = deliveryApi;
