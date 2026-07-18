@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ChevronRight, Star, Clock, Bike, ArrowRight, UtensilsCrossed, Zap, Shield, Smile } from 'lucide-react';
 import { useGetRestaurantsQuery } from '../redux/api/restaurantApi';
 import { useGetCategoriesQuery } from '../redux/api/otherApi';
+import { useGetMyOrdersQuery } from '../redux/api/orderApi';
+import { useSelector } from 'react-redux';
+import { selectAuth } from '../redux/slices/authSlice';
 import RestaurantCard from '../components/RestaurantCard';
+import LiveTrackingModal from '../components/LiveTrackingModal';
 import { ROUTES } from '../constants';
 
 const HERO_SLIDES = [
@@ -24,6 +28,12 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [slideIndex, setSlideIndex] = useState(0);
+  const [showTracking, setShowTracking] = useState(false);
+
+  const { isAuthenticated } = useSelector(selectAuth);
+  
+  const { data: myOrdersData } = useGetMyOrdersQuery(undefined, { skip: !isAuthenticated });
+  const activeOrder = myOrdersData?.data?.find(o => o.orderStatus === 'out_for_delivery');
 
   const { data: restaurantData, isLoading: restaurantsLoading } = useGetRestaurantsQuery({ limit: 6 });
   const { data: categoryData } = useGetCategoriesQuery();
@@ -237,6 +247,38 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Floating Active Delivery Banner */}
+      <AnimatePresence>
+        {activeOrder && !showTracking && (
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-11/12 max-w-md"
+          >
+            <div className="glass-card bg-primary-500/90 dark:bg-primary-600/90 border-primary-400 dark:border-primary-500 p-4 flex items-center justify-between shadow-glow cursor-pointer" onClick={() => setShowTracking(true)}>
+              <div className="flex items-center gap-3 text-white">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+                  <Bike className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-heading font-bold text-sm">Your order is on the way!</h4>
+                  <p className="text-xs text-white/80">Tap to track delivery partner</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-white" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Full Screen Tracking Modal */}
+      <LiveTrackingModal 
+        isOpen={showTracking} 
+        onClose={() => setShowTracking(false)} 
+        order={activeOrder} 
+      />
     </div>
   );
 }
