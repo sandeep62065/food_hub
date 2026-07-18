@@ -4,6 +4,8 @@ import { Map, LogOut, LayoutDashboard } from 'lucide-react';
 import { ROLES, ROUTES } from '../constants';
 import { logout } from '../redux/slices/authSlice';
 import toast from 'react-hot-toast';
+import { AnimatePresence } from 'framer-motion';
+import PageTransition from '../components/PageTransition';
 
 export default function DeliveryLayout() {
   const { user } = useSelector((state) => state.auth);
@@ -81,8 +83,12 @@ export default function DeliveryLayout() {
            <Map className="w-6 h-6 text-primary-500 mr-2" />
            <span className="font-heading font-bold text-lg text-gray-900 dark:text-white">Partner App</span>
         </header>
-        <div className="flex-1 overflow-auto p-4 md:p-8">
-          <Outlet />
+        <div className="flex-1 overflow-auto p-4 md:p-8 relative flex flex-col">
+          <AnimatePresence mode="wait">
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
+          </AnimatePresence>
         </div>
       </main>
     </div>

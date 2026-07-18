@@ -5,6 +5,8 @@ import { LayoutDashboard, UtensilsCrossed, ShoppingBag, Star, PlusCircle, Menu, 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLogoutMutation } from '../redux/api/authApi';
+import { AnimatePresence } from 'framer-motion';
+import PageTransition from '../components/PageTransition';
 
 const NAV_ITEMS = [
   { to: '/owner/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -88,8 +90,12 @@ export default function OwnerLayout() {
             <Menu className="w-4 h-4" />
           </button>
         </header>
-        <main className="flex-1 p-4 sm:p-6">
-          <Outlet />
+        <main className="flex-1 p-4 sm:p-6 relative overflow-hidden flex flex-col">
+          <AnimatePresence mode="wait">
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
+          </AnimatePresence>
         </main>
       </div>
     </div>

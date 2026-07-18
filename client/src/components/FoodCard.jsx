@@ -50,8 +50,9 @@ function FoodCard({ food, index = 0 }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
+      whileHover={{ y: -5 }}
     >
-      <Link to={`/food/${_id}`} className="card flex flex-col h-full overflow-hidden group">
+      <Link to={`/food/${_id}`} className="glass-card flex flex-col h-full overflow-hidden group">
         {/* Image */}
         <div className="relative overflow-hidden h-44">
           <img
@@ -108,17 +109,18 @@ function FoodCard({ food, index = 0 }) {
                 <span className="ml-1.5 text-sm text-gray-400 line-through">{formatCurrency(price)}</span>
               )}
             </div>
-            <button
+            <motion.button
+              whileTap={{ scale: 0.9 }}
               onClick={handleAddToCart}
               disabled={!isAvailable || isAdding}
-              className="w-9 h-9 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl flex items-center justify-center transition-all duration-200 hover:shadow-glow active:scale-90"
+              className="w-9 h-9 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl flex items-center justify-center transition-all duration-200 hover:shadow-glow"
             >
               {isAdding ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <Plus className="w-4 h-4" />
               )}
-            </button>
+            </motion.button>
           </div>
         </div>
       </Link>

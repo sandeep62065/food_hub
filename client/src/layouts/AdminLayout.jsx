@@ -7,6 +7,8 @@ import { useDispatch } from 'react-redux';
 import { logout } from '../redux/slices/authSlice';
 import { useLogoutMutation } from '../redux/api/authApi';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import PageTransition from '../components/PageTransition';
 
 const NAV_ITEMS = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -113,8 +115,12 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50 dark:bg-dark-900 relative">
+          <AnimatePresence mode="wait">
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
+          </AnimatePresence>
         </main>
       </div>
     </div>

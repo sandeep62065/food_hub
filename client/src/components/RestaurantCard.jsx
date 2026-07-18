@@ -12,10 +12,11 @@ function RestaurantCard({ restaurant, index = 0 }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.06 }}
+      whileHover={{ y: -5 }}
     >
       <Link
         to={`/restaurants/${_id}`}
-        className="card block overflow-hidden group cursor-pointer"
+        className="glass-card block overflow-hidden group cursor-pointer"
       >
         {/* Image */}
         <div className="relative overflow-hidden h-48">
