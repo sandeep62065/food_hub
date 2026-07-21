@@ -36,7 +36,6 @@ import AdminRestaurantsPage from './pages/admin/AdminRestaurantsPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminFoodsPage from './pages/admin/AdminFoodsPage';
-import AdminCouponsPage from './pages/admin/AdminCouponsPage';
 
 // Owner Pages
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage';
@@ -140,9 +139,9 @@ export default function App() {
           <Route path={ROUTES.ADMIN_RESTAURANTS} element={<AdminRestaurantsPage />} />
           <Route path={ROUTES.ADMIN_ORDERS} element={<AdminOrdersPage />} />
           <Route path={ROUTES.ADMIN_CATEGORIES} element={<AdminCategoriesPage />} />
-          <Route path={ROUTES.ADMIN_COUPONS} element={<AdminCouponsPage />} />
           {/* Placeholders for others */}
           <Route path={ROUTES.ADMIN_FOODS} element={<AdminFoodsPage />} />
+          <Route path={ROUTES.ADMIN_COUPONS} element={<div className="p-8"><h1 className="text-2xl font-bold">Coupons</h1></div>} />
         </Route>
 
         {/* Owner Routes */}
