@@ -8,15 +8,36 @@ const { uploadToCloudinary } = require('../utils/cloudinaryUpload');
 // @route  GET /api/v1/foods
 const getFoods = async (req, res, next) => {
   try {
-    const baseQuery = Food.find({ isAvailable: true }).populate('category', 'name slug').populate('restaurant', 'name address');
+    let queryObj = { isAvailable: true };
+
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search, 'i');
+      
+      // Find matching restaurants by name or cuisine
+      const matchingRestaurants = await Restaurant.find({
+        isApproved: true,
+        $or: [{ name: searchRegex }, { cuisine: searchRegex }],
+      }).select('_id');
+      
+      const restaurantIds = matchingRestaurants.map((r) => r._id);
+
+      queryObj.$or = [
+        { name: searchRegex },
+        { description: searchRegex },
+        { restaurant: { $in: restaurantIds } },
+      ];
+    }
+
+    const baseQuery = Food.find(queryObj).populate('category', 'name slug').populate('restaurant', 'name address');
+    
+    // Pass the baseQuery and req.query. The ApiFeatures.filter() will remove search from req.query and apply the rest
     const features = new ApiFeatures(baseQuery, req.query)
-      .search('name description')
       .filter()
       .sort()
       .paginate(16);
 
     const foods = await features.query;
-    const total = await Food.countDocuments({ isAvailable: true });
+    const total = await Food.countDocuments(queryObj);
 
     res.json({
       success: true,

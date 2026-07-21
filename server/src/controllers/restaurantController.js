@@ -8,7 +8,14 @@ const { uploadToCloudinary } = require('../utils/cloudinaryUpload');
 // @route  GET /api/v1/restaurants
 const getRestaurants = async (req, res, next) => {
   try {
-    const baseQuery = Restaurant.find({ isApproved: true });
+    let queryObj = { isApproved: true };
+
+    if (req.query.cuisine) {
+      queryObj.cuisine = new RegExp(req.query.cuisine, 'i');
+      delete req.query.cuisine; // Prevent filter() from overriding this with a strict match
+    }
+
+    const baseQuery = Restaurant.find(queryObj);
     const features = new ApiFeatures(baseQuery, req.query)
       .search('name cuisine')
       .filter()
@@ -16,7 +23,7 @@ const getRestaurants = async (req, res, next) => {
       .paginate(12);
 
     const restaurants = await features.query.populate('owner', 'name email');
-    const total = await Restaurant.countDocuments({ isApproved: true });
+    const total = await Restaurant.countDocuments(queryObj);
 
     res.json({
       success: true,

@@ -25,6 +25,7 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef(null);
 
   const dispatch = useDispatch();
@@ -72,6 +73,14 @@ export default function Navbar() {
     return ROUTES.PROFILE;
   };
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
+  };
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -90,7 +99,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav Links */}
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden lg:flex items-center gap-1">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.to}
@@ -104,6 +113,20 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+        </div>
+
+        {/* Global Search Bar */}
+        <div className="hidden md:flex flex-1 max-w-sm mx-4">
+          <form onSubmit={handleSearchSubmit} className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search foods or restaurants..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-gray-100 dark:bg-dark-700 border-none rounded-full py-2 pl-9 pr-4 text-sm focus:ring-2 focus:ring-primary-500 dark:text-white transition-shadow"
+            />
+          </form>
         </div>
 
         {/* Right Actions */}
@@ -256,6 +279,18 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
+
+              <form onSubmit={(e) => { handleSearchSubmit(e); setIsMenuOpen(false); }} className="relative mx-4 mt-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-gray-100 dark:bg-dark-700 border-none rounded-lg py-2.5 pl-9 pr-4 text-sm focus:ring-2 focus:ring-primary-500 dark:text-white"
+                />
+              </form>
+
               {!isAuthenticated && (
                 <div className="flex gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-dark-600">
                   <Link to={ROUTES.LOGIN} className="btn-secondary flex-1 text-center text-sm">Login</Link>

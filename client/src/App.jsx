@@ -17,6 +17,7 @@ import HomePage from './pages/HomePage';
 import RestaurantsPage from './pages/RestaurantsPage';
 import RestaurantDetailPage from './pages/RestaurantDetailPage';
 import FoodDetailPage from './pages/FoodDetailPage';
+import SearchPage from './pages/SearchPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -114,9 +115,10 @@ export default function App() {
           <Route path={ROUTES.RESTAURANTS} element={<RestaurantsPage />} />
           <Route path={ROUTES.RESTAURANT_DETAIL} element={<RestaurantDetailPage />} />
           <Route path={ROUTES.FOOD_DETAIL} element={<FoodDetailPage />} />
+          <Route path="/search" element={<SearchPage />} />
           
           {/* Static informational pages (can be placeholders) */}
-          <Route path={ROUTES.ABOUT} element={<div className="container-custom py-20 text-center"><h1 className="text-3xl font-bold">About Us</h1><p className="mt-4">FoodieHub is the best food delivery platform.</p></div>} />
+          <Route path={ROUTES.ABOUT} element={<div className="p-8 text-center text-2xl">About Us Page Coming Soon</div>} />
           <Route path={ROUTES.CONTACT} element={<div className="container-custom py-20 text-center"><h1 className="text-3xl font-bold">Contact Us</h1><p className="mt-4">Reach us at support@foodiehub.com</p></div>} />
           <Route path={ROUTES.OFFERS} element={<div className="container-custom py-20 text-center"><h1 className="text-3xl font-bold">Latest Offers</h1><p className="mt-4">Use code FOODIE50 for 50% off!</p></div>} />
           <Route path={ROUTES.FAQ} element={<div className="container-custom py-20 text-center"><h1 className="text-3xl font-bold">FAQ</h1><p className="mt-4">Common questions and answers.</p></div>} />
