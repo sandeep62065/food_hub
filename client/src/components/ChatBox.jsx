@@ -59,7 +59,7 @@ export default function ChatBox({ orderId, socket, currentUserRole, currentUserI
     return (
       <button 
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-primary-500 hover:bg-primary-600 text-white rounded-full flex items-center justify-center shadow-xl transition-all z-[60] animate-bounce-slow"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-primary-500 hover:bg-primary-600 text-white rounded-full flex items-center justify-center shadow-xl transition-all z-[9999] animate-bounce-slow"
       >
         <MessageSquare className="w-6 h-6" />
       </button>
@@ -67,7 +67,7 @@ export default function ChatBox({ orderId, socket, currentUserRole, currentUserI
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-[340px] sm:w-[380px] bg-white dark:bg-dark-800 rounded-2xl shadow-2xl z-[60] flex flex-col border border-gray-100 dark:border-dark-700 overflow-hidden" style={{ height: '500px', maxHeight: '80vh' }}>
+    <div className="fixed bottom-6 right-6 w-[340px] sm:w-[380px] bg-white dark:bg-dark-800 rounded-2xl shadow-2xl z-[9999] flex flex-col border border-gray-100 dark:border-dark-700 overflow-hidden" style={{ height: '500px', maxHeight: '80vh' }}>
       {/* Header */}
       <div className="bg-primary-500 text-white p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
