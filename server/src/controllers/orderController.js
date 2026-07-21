@@ -225,6 +225,19 @@ const updateOrderStatus = async (req, res, next) => {
            await User.findByIdAndUpdate(order.user, { $inc: { loyaltyPoints: earned } });
            order.pointsEarned = earned;
         }
+
+        // --- Referral Bonus Logic ---
+        const orderUser = await User.findById(order.user);
+        if (orderUser && orderUser.referredBy) {
+          const previousDeliveredCount = await Order.countDocuments({ 
+            user: order.user, 
+            orderStatus: 'delivered', 
+            _id: { $ne: order._id } 
+          });
+          if (previousDeliveredCount === 0) {
+            await User.findByIdAndUpdate(orderUser.referredBy, { $inc: { loyaltyPoints: 200 } });
+          }
+        }
       }
     }
     order.statusHistory.push({ status, timestamp: new Date(), note });

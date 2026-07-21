@@ -10,12 +10,13 @@ const {
   clearRefreshCookie,
 } = require('../utils/generateToken');
 const { sendEmail, passwordResetEmail } = require('../utils/sendEmail');
+const { generateReferralCode } = require('../utils/generateReferralCode');
 
 // @desc   Register
 // @route  POST /api/v1/auth/register
 const register = async (req, res, next) => {
   try {
-    const { name, email, password, phone, role } = req.body;
+    const { name, email, password, phone, role, referralCode } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -26,7 +27,31 @@ const register = async (req, res, next) => {
     const allowedRoles = ['customer', 'owner', 'delivery_partner'];
     const userRole = allowedRoles.includes(role) ? role : 'customer';
 
-    const user = await User.create({ name, email, password, phone, role: userRole });
+    let referredBy = undefined;
+    if (referralCode) {
+      const referrer = await User.findOne({ referralCode: referralCode.trim().toUpperCase() });
+      if (referrer) {
+        referredBy = referrer._id;
+      }
+    }
+
+    let newReferralCode = generateReferralCode(name);
+    let isUnique = false;
+    let attempts = 0;
+    while (!isUnique && attempts < 5) {
+      const codeExists = await User.findOne({ referralCode: newReferralCode });
+      if (codeExists) {
+        newReferralCode = generateReferralCode(name);
+        attempts++;
+      } else {
+        isUnique = true;
+      }
+    }
+
+    const user = await User.create({ 
+      name, email, password, phone, role: userRole, 
+      referredBy, referralCode: newReferralCode 
+    });
 
     const accessToken = generateAccessToken(user._id, user.role);
     const refreshToken = generateRefreshToken(user._id);

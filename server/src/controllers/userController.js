@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Order = require('../models/Order');
 const Address = require('../models/Address');
 const LoyaltySettings = require('../models/LoyaltySettings');
 const AppError = require('../utils/AppError');
@@ -140,4 +141,33 @@ const getLoyaltyPoints = async (req, res, next) => {
   }
 };
 
-module.exports = { getMe, updateMe, changePassword, getAddresses, addAddress, updateAddress, deleteAddress, getLoyaltyPoints };
+// @desc   Get referral info
+// @route  GET /api/v1/users/referral
+const getReferralInfo = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const referredUsers = await User.find({ referredBy: req.user._id }).select('_id');
+    const referredUserIds = referredUsers.map(u => u._id);
+    
+    // Count how many referred users have at least 1 delivered order
+    const successfulReferrals = await Order.distinct('user', { 
+      user: { $in: referredUserIds }, 
+      orderStatus: 'delivered' 
+    });
+
+    const shareableLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/register?ref=${user.referralCode}`;
+
+    res.json({
+      success: true,
+      data: {
+        referralCode: user.referralCode,
+        shareableLink,
+        successfulReferralsCount: successfulReferrals.length,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getMe, updateMe, changePassword, getAddresses, addAddress, updateAddress, deleteAddress, getLoyaltyPoints, getReferralInfo };

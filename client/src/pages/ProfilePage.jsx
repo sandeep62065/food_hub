@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectAuth, updateUser } from '../redux/slices/authSlice';
-import { useGetMeQuery, useGetLoyaltyPointsQuery, useUpdateMeMutation, useGetAddressesQuery, useAddAddressMutation, useDeleteAddressMutation } from '../redux/api/otherApi';
-import { User, Mail, Phone, MapPin, Trash2, Camera, Award } from 'lucide-react';
+import { useGetMeQuery, useGetLoyaltyPointsQuery, useGetReferralInfoQuery, useUpdateMeMutation, useGetAddressesQuery, useAddAddressMutation, useDeleteAddressMutation } from '../redux/api/otherApi';
+import { User, Mail, Phone, MapPin, Trash2, Camera, Award, Gift, Copy, CheckCircle2 } from 'lucide-react';
 import { getInitials } from '../utils';
 import toast from 'react-hot-toast';
 
@@ -12,6 +12,7 @@ export default function ProfilePage() {
   
   const { data: addressData } = useGetAddressesQuery();
   const { data: loyaltyData } = useGetLoyaltyPointsQuery();
+  const { data: referralData } = useGetReferralInfoQuery();
   const [updateMe, { isLoading: isUpdating }] = useUpdateMeMutation();
   const [addAddress] = useAddAddressMutation();
   const [deleteAddress] = useDeleteAddressMutation();
@@ -20,9 +21,11 @@ export default function ProfilePage() {
   const [avatar, setAvatar] = useState(null);
   const [newAddress, setNewAddress] = useState({ label: 'Home', street: '', city: '', state: '', pincode: '' });
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const addresses = addressData?.data || [];
   const loyaltyPoints = loyaltyData?.data?.points || 0;
+  const referral = referralData?.data;
 
   useEffect(() => {
     if (user) {
@@ -65,6 +68,15 @@ export default function ProfilePage() {
       toast.success('Address removed');
     } catch {
       toast.error('Failed to remove address');
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (referral?.shareableLink) {
+      navigator.clipboard.writeText(referral.shareableLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success('Referral link copied!');
     }
   };
 
@@ -135,6 +147,38 @@ export default function ProfilePage() {
                 </button>
               </form>
             </div>
+
+            {/* Refer & Earn Card */}
+            {referral && (
+              <div className="card p-6 bg-gradient-to-br from-primary-50 to-primary-100/50 dark:from-primary-900/20 dark:to-primary-900/10 border-primary-100 dark:border-primary-900/30">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-500/20 flex items-center justify-center text-primary-500">
+                    <Gift className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-heading font-bold text-gray-900 dark:text-white">Refer & Earn</h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Get 200 pts for every friend!</p>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-dark-800 rounded-lg p-3 border border-gray-100 dark:border-dark-600 mb-4 flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate font-mono">
+                    {referral.shareableLink}
+                  </span>
+                  <button 
+                    onClick={handleCopyLink}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-md text-gray-500 transition-colors shrink-0"
+                  >
+                    {copied ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Successful Referrals:</span>
+                  <span className="font-bold text-gray-900 dark:text-white">{referral.successfulReferralsCount}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right - Addresses */}

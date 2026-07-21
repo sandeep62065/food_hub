@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,6 +27,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const [register, { isLoading }] = useRegisterMutation();
 
@@ -43,6 +44,10 @@ export default function RegisterPage() {
 
   const onSubmit = async (data) => {
     const { confirmPassword, ...submitData } = data;
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      submitData.referralCode = refCode;
+    }
     try {
       const result = await register(submitData).unwrap();
       dispatch(setCredentials({ user: result.data.user, accessToken: result.data.accessToken }));
