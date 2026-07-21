@@ -1,6 +1,8 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Restaurant = require('../models/Restaurant');
+const Coupon = require('../models/Coupon');
+const { computeDiscount } = require('./couponController');
 const AppError = require('../utils/AppError');
 const ApiFeatures = require('../utils/ApiFeatures');
 const { sendEmail, orderConfirmationEmail } = require('../utils/sendEmail');
@@ -11,7 +13,7 @@ const GST_RATE = 0.05; // 5%
 // @route  POST /api/v1/orders
 const placeOrder = async (req, res, next) => {
   try {
-    const { deliveryAddress, paymentMethod = 'COD' } = req.body;
+    const { deliveryAddress, paymentMethod = 'COD', couponCode } = req.body;
 
     const cart = await Cart.findOne({ user: req.user._id }).populate('items.food restaurant');
     if (!cart || cart.items.length === 0) {
@@ -33,7 +35,25 @@ const placeOrder = async (req, res, next) => {
     const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
     const deliveryFee = restaurant.deliveryFee || 30;
     const gst = Math.round(subtotal * GST_RATE);
-    const grandTotal = subtotal + deliveryFee + gst;
+
+    // --- Coupon validation (optional) ---
+    let discount = 0;
+    let appliedCoupon = null;
+    if (couponCode) {
+      const coupon = await Coupon.findOne({ code: couponCode.trim().toUpperCase() });
+      if (
+        coupon &&
+        coupon.isActive &&
+        new Date() <= coupon.expiryDate &&
+        subtotal >= coupon.minOrderAmount &&
+        (coupon.usageLimit === null || coupon.usedCount < coupon.usageLimit)
+      ) {
+        discount = computeDiscount(coupon, subtotal);
+        appliedCoupon = coupon;
+      }
+    }
+
+    const grandTotal = subtotal + deliveryFee + gst - discount;
 
     const order = await Order.create({
       user: req.user._id,
@@ -43,12 +63,18 @@ const placeOrder = async (req, res, next) => {
       subtotal,
       deliveryFee,
       gst,
+      discount,
       grandTotal,
       paymentMethod,
       paymentStatus: paymentMethod === 'COD' ? 'pending' : 'pending',
       orderStatus: 'placed',
       statusHistory: [{ status: 'placed', timestamp: new Date() }],
     });
+
+    // Increment coupon usedCount after order is created
+    if (appliedCoupon) {
+      await Coupon.findByIdAndUpdate(appliedCoupon._id, { $inc: { usedCount: 1 } });
+    }
 
     // Clear cart
     await Cart.findOneAndUpdate({ user: req.user._id }, { items: [], restaurant: undefined });
