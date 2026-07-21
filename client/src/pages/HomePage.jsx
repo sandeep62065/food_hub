@@ -48,7 +48,9 @@ export default function HomePage() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    navigate(`${ROUTES.RESTAURANTS}?search=${encodeURIComponent(searchQuery)}`);
+    if (searchQuery.trim()) {
+      navigate(`/search?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
   };
 
   return (
