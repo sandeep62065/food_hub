@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectAuth, updateUser } from '../redux/slices/authSlice';
 import { useGetMeQuery, useGetLoyaltyPointsQuery, useGetReferralInfoQuery, useUpdateMeMutation, useGetAddressesQuery, useAddAddressMutation, useDeleteAddressMutation } from '../redux/api/otherApi';
-import { User, Mail, Phone, MapPin, Trash2, Camera, Award, Gift, Copy, CheckCircle2 } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Trash2, Camera, Award, Gift, Copy, CheckCircle2, Share2 } from 'lucide-react';
 import { getInitials } from '../utils';
 import toast from 'react-hot-toast';
 
@@ -71,12 +71,32 @@ export default function ProfilePage() {
     }
   };
 
-  const handleCopyLink = () => {
+  const copyToClipboard = () => {
     if (referral?.shareableLink) {
       navigator.clipboard.writeText(referral.shareableLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      toast.success('Referral link copied!');
+      toast.success('Referral link copied to clipboard!');
+    }
+  };
+
+  const handleShareLink = async () => {
+    if (!referral?.shareableLink) return;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join FoodieHub!',
+          text: 'Hey! I order amazing food from FoodieHub. Sign up using my link and we both get rewarded with Loyalty Points! 🍔🍕',
+          url: referral.shareableLink,
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          copyToClipboard();
+        }
+      }
+    } else {
+      copyToClipboard();
     }
   };
 
@@ -165,12 +185,24 @@ export default function ProfilePage() {
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate font-mono">
                     {referral.shareableLink}
                   </span>
-                  <button 
-                    onClick={handleCopyLink}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-md text-gray-500 transition-colors shrink-0"
-                  >
-                    {copied ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                  </button>
+                  <div className="flex gap-1 shrink-0">
+                    <button 
+                      onClick={copyToClipboard}
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-md text-gray-500 transition-colors"
+                      title="Copy Link"
+                    >
+                      {copied ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                    {!!navigator.share && (
+                      <button 
+                        onClick={handleShareLink}
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-md text-primary-500 hover:text-primary-600 transition-colors bg-primary-50 dark:bg-primary-500/10"
+                        title="Share via Apps"
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
