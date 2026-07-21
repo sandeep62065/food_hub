@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Minus, Star, Leaf } from 'lucide-react';
+import { Plus, Minus, Star, Leaf, Heart } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { openDrawer } from '../redux/slices/cartSlice';
-import { selectIsAuthenticated } from '../redux/slices/authSlice';
+import { selectIsAuthenticated, selectAuth } from '../redux/slices/authSlice';
 import { useAddToCartMutation } from '../redux/api/foodApi';
+import { useGetWishlistQuery, useAddToWishlistMutation, useRemoveFromWishlistMutation } from '../redux/api/wishlistApi';
 import { formatCurrency } from '../utils';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -12,10 +13,18 @@ import toast from 'react-hot-toast';
 function FoodCard({ food, index = 0 }) {
   const { _id, name, description, images, price, discountPrice, isVeg, avgRating, isAvailable } = food;
   const [isAdding, setIsAdding] = useState(false);
+  const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  const { user } = useSelector(selectAuth);
+  const isCustomer = isAuthenticated && user?.role === 'customer';
   const [addToCart] = useAddToCartMutation();
+  const { data: wishlistData } = useGetWishlistQuery(undefined, { skip: !isCustomer });
+  const [addToWishlist] = useAddToWishlistMutation();
+  const [removeFromWishlist] = useRemoveFromWishlistMutation();
+
+  const isWishlisted = wishlistData?.data?.foods?.some((f) => (f._id || f) === _id) ?? false;
 
   const effectivePrice = discountPrice && discountPrice < price ? discountPrice : price;
   const hasDiscount = discountPrice && discountPrice < price;
@@ -45,6 +54,28 @@ function FoodCard({ food, index = 0 }) {
     }
   };
 
+  const handleWishlistToggle = async (e) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    setIsTogglingWishlist(true);
+    try {
+      if (isWishlisted) {
+        await removeFromWishlist(_id).unwrap();
+        toast.success(`${name} removed from wishlist`);
+      } else {
+        await addToWishlist({ foodId: _id }).unwrap();
+        toast.success(`${name} added to wishlist!`);
+      }
+    } catch (err) {
+      toast.error(err.data?.message || 'Failed to update wishlist');
+    } finally {
+      setIsTogglingWishlist(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -69,12 +100,30 @@ function FoodCard({ food, index = 0 }) {
             </div>
           </div>
 
+          {/* Wishlist Heart Button */}
+          {isCustomer && (
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={handleWishlistToggle}
+              disabled={isTogglingWishlist}
+              aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm flex items-center justify-center shadow-sm hover:scale-110 transition-transform duration-200 z-10"
+            >
+              <Heart
+                className={`w-3.5 h-3.5 transition-colors duration-200 ${
+                  isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-400'
+                }`}
+              />
+            </motion.button>
+          )}
+
           {/* Discount Badge */}
           {hasDiscount && (
-            <div className="absolute top-2 right-2 bg-primary-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+            <div className="absolute top-10 right-2 bg-primary-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
               {discountPercent}% OFF
             </div>
           )}
+
 
           {/* Unavailable Overlay */}
           {!isAvailable && (

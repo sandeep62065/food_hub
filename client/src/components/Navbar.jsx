@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingCart, Sun, Moon, Menu, X, Search, User, LogOut,
-  ChevronDown, LayoutDashboard, Store, UtensilsCrossed,
+  ChevronDown, LayoutDashboard, Store, UtensilsCrossed, Heart,
 } from 'lucide-react';
 import { logout, selectAuth } from '../redux/slices/authSlice';
 import { clearCartState, selectCartCount, openDrawer } from '../redux/slices/cartSlice';
@@ -117,6 +117,17 @@ export default function Navbar() {
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
+          {/* Wishlist */}
+          {isAuthenticated && user?.role === 'customer' && (
+            <Link
+              to={ROUTES.WISHLIST}
+              className="relative btn-ghost w-9 h-9 p-0 rounded-lg flex items-center justify-center"
+              aria-label="My Wishlist"
+            >
+              <Heart className="w-4 h-4" />
+            </Link>
+          )}
+
           {/* Cart */}
           {isAuthenticated && user?.role === 'customer' && (
             <button
@@ -180,6 +191,10 @@ export default function Navbar() {
                         <Link to={ROUTES.ORDERS} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
                           <Store className="w-4 h-4" />
                           My Orders
+                        </Link>
+                        <Link to={ROUTES.WISHLIST} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
+                          <Heart className="w-4 h-4" />
+                          My Wishlist
                         </Link>
                         <Link to={ROUTES.ADDRESSES} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
                           <User className="w-4 h-4" />

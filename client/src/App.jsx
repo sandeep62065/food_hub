@@ -27,6 +27,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import OrdersPage from './pages/OrdersPage';
 import OrderDetailPage from './pages/OrderDetailPage';
 import ProfilePage from './pages/ProfilePage';
+import WishlistPage from './pages/WishlistPage';
 
 // Admin Pages
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -127,6 +128,7 @@ export default function App() {
           <Route path={ROUTES.ORDER_DETAIL} element={<OrderDetailPage />} />
           <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
           <Route path={ROUTES.ADDRESSES} element={<ProfilePage />} />
+          <Route path={ROUTES.WISHLIST} element={<WishlistPage />} />
         </Route>
 
         {/* Admin Routes */}

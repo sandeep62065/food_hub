@@ -14,7 +14,7 @@ export const ROUTES = {
 
   // Customer
   PROFILE: '/profile',
-  WISHLIST: '/profile/wishlist',
+  WISHLIST: '/wishlist',
   CART: '/cart',
   CHECKOUT: '/checkout',
   ORDERS: '/orders',
