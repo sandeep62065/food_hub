@@ -13,10 +13,8 @@ const createTransporter = () => {
 };
 
 const sendEmail = async ({ to, subject, html, text }) => {
-  // Skip email if SMTP not configured in dev
   if (!process.env.SMTP_USER || process.env.SMTP_USER === 'your_gmail@gmail.com') {
-    console.log(`[Email skip - SMTP not configured] To: ${to} | Subject: ${subject}`);
-    return;
+    throw new Error('SMTP is not configured. Please set SMTP_USER and SMTP_PASS in your .env file.');
   }
 
   const transporter = createTransporter();

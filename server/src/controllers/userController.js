@@ -31,8 +31,8 @@ const updateMe = async (req, res, next) => {
       try {
         const { url } = await uploadToCloudinary(req.file.buffer, 'foodiehub/avatars');
         updateData.avatarUrl = url;
-      } catch {
-        updateData.avatarUrl = req.user.avatarUrl;
+      } catch (err) {
+        return next(new AppError('Failed to upload image. Please check Cloudinary configuration.', 500));
       }
     }
 
