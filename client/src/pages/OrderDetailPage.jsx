@@ -41,7 +41,7 @@ export default function OrderDetailPage() {
   const [cancelReason, setCancelReason] = useState('');
   
   const [partnerLocation, setPartnerLocation] = useState(null);
-  const socketRef = useRef(null);
+  const [socket, setSocket] = useState(null);
 
   const order = data?.data;
 
@@ -52,17 +52,18 @@ export default function OrderDetailPage() {
         ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
         : 'http://localhost:5000';
       
-      socketRef.current = io(socketUrl);
-      socketRef.current.emit('join-order', id);
+      const newSocket = io(socketUrl);
+      setSocket(newSocket);
+      newSocket.emit('join-order', id);
       
-      socketRef.current.on('location-updated', (loc) => {
+      newSocket.on('location-updated', (loc) => {
         setPartnerLocation({ lat: loc.lat, lng: loc.lng });
       });
+
+      return () => {
+        newSocket.disconnect();
+      };
     }
-    
-    return () => {
-      if (socketRef.current) socketRef.current.disconnect();
-    };
   }, [order?.orderStatus, id]);
 
   // Update from DB polling
@@ -238,10 +239,10 @@ export default function OrderDetailPage() {
         </div>
       </Modal>
       {/* ChatBox for customer */}
-      {(order?.orderStatus === 'out_for_delivery' || order?.orderStatus === 'preparing') && socketRef.current && (
+      {(order?.orderStatus === 'out_for_delivery' || order?.orderStatus === 'preparing') && socket && (
         <ChatBox 
           orderId={id} 
-          socket={socketRef.current} 
+          socket={socket} 
           currentUserRole="customer" 
           currentUserId={user?._id} 
         />

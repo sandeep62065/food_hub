@@ -39,7 +39,7 @@ export default function ActiveDeliveryPage() {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
   const watchIdRef = useRef(null);
-  const socketRef = useRef(null);
+  const [socket, setSocket] = useState(null);
 
   const order = data?.data?.find(o => o._id === id);
 
@@ -62,8 +62,9 @@ export default function ActiveDeliveryPage() {
       ? import.meta.env.VITE_API_URL.replace('/api/v1', '') 
       : 'http://localhost:5000';
     
-    socketRef.current = io(socketUrl);
-    socketRef.current.emit('join-order', id);
+    const newSocket = io(socketUrl);
+    setSocket(newSocket);
+    newSocket.emit('join-order', id);
 
     setIsTracking(true);
     
@@ -72,7 +73,7 @@ export default function ActiveDeliveryPage() {
       (position) => {
         const { latitude: lat, longitude: lng } = position.coords;
         setCurrentLocation({ lat, lng });
-        socketRef.current.emit('update-location', { orderId: id, lat, lng });
+        newSocket.emit('update-location', { orderId: id, lat, lng });
         updateLocation({ id, lat, lng });
       },
       (err) => console.error('Initial location error:', err),
@@ -83,7 +84,7 @@ export default function ActiveDeliveryPage() {
       (position) => {
         const { latitude: lat, longitude: lng } = position.coords;
         setCurrentLocation({ lat, lng });
-        socketRef.current.emit('update-location', { orderId: id, lat, lng });
+        newSocket.emit('update-location', { orderId: id, lat, lng });
         updateLocation({ id, lat, lng });
       },
       (error) => {
@@ -98,8 +99,8 @@ export default function ActiveDeliveryPage() {
     if (watchIdRef.current) {
       navigator.geolocation.clearWatch(watchIdRef.current);
     }
-    if (socketRef.current) {
-      socketRef.current.disconnect();
+    if (socket) {
+      socket.disconnect();
     }
     setIsTracking(false);
   };
@@ -215,10 +216,10 @@ export default function ActiveDeliveryPage() {
       </div>
 
       {/* ChatBox for delivery partner */}
-      {order && socketRef.current && (
+      {order && socket && (
         <ChatBox 
           orderId={id} 
-          socket={socketRef.current} 
+          socket={socket} 
           currentUserRole="delivery_partner" 
           currentUserId={user?._id} 
         />
