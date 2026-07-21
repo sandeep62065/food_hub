@@ -40,6 +40,22 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('send_chat_message', async ({ orderId, message, senderRole, senderId }) => {
+    try {
+      const ChatMessage = require('./src/models/ChatMessage');
+      const chatMsg = await ChatMessage.create({
+        order: orderId,
+        sender: senderId,
+        senderRole,
+        message,
+      });
+      const populatedMsg = await chatMsg.populate('sender', 'name avatarUrl');
+      io.to(`order_${orderId}`).emit('receive_chat_message', populatedMsg);
+    } catch (err) {
+      console.error('Error saving chat message:', err.message);
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('Socket disconnected:', socket.id);
   });

@@ -21,10 +21,13 @@ const generatePasswordResetToken = () => {
 
 // Set refresh token in httpOnly cookie
 const sendRefreshCookie = (res, token) => {
+  const isCrossDomain = process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost');
+  const isProd = process.env.NODE_ENV === 'production' || isCrossDomain;
+  
   const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     path: '/',
   };
@@ -32,7 +35,15 @@ const sendRefreshCookie = (res, token) => {
 };
 
 const clearRefreshCookie = (res) => {
-  res.clearCookie('refreshToken', { path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' });
+  const isCrossDomain = process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost');
+  const isProd = process.env.NODE_ENV === 'production' || isCrossDomain;
+  
+  res.clearCookie('refreshToken', { 
+    path: '/', 
+    httpOnly: true, 
+    secure: isProd, 
+    sameSite: isProd ? 'none' : 'lax' 
+  });
 };
 
 module.exports = {

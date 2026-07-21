@@ -4,6 +4,9 @@ import { useGetMyDeliveriesQuery, useUpdateDeliveryOrderStatusMutation, useUpdat
 import { io } from 'socket.io-client';
 import { MapPin, Navigation, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ChatBox from '../../components/ChatBox';
+import { useSelector } from 'react-redux';
+import { selectAuth } from '../../redux/slices/authSlice';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -28,6 +31,7 @@ function MapUpdater({ center }) {
 export default function ActiveDeliveryPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useSelector(selectAuth);
   const { data, isLoading } = useGetMyDeliveriesQuery();
   const [updateStatus, { isLoading: isUpdating }] = useUpdateDeliveryOrderStatusMutation();
   const [updateLocation] = useUpdateDeliveryLocationMutation();
@@ -209,6 +213,16 @@ export default function ActiveDeliveryPage() {
           )}
         </div>
       </div>
+
+      {/* ChatBox for delivery partner */}
+      {order && socketRef.current && (
+        <ChatBox 
+          orderId={id} 
+          socket={socketRef.current} 
+          currentUserRole="delivery_partner" 
+          currentUserId={user?._id} 
+        />
+      )}
     </div>
   );
 }

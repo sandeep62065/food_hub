@@ -12,6 +12,9 @@ import { io } from 'socket.io-client';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import ChatBox from '../components/ChatBox';
+import { useSelector } from 'react-redux';
+import { selectAuth } from '../redux/slices/authSlice';
 
 // Fix leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -31,6 +34,7 @@ function MapUpdater({ center }) {
 
 export default function OrderDetailPage() {
   const { id } = useParams();
+  const { user } = useSelector(selectAuth);
   const { data, isLoading } = useGetOrderQuery(id, { pollingInterval: 5000 });
   const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -233,6 +237,15 @@ export default function OrderDetailPage() {
           </div>
         </div>
       </Modal>
+      {/* ChatBox for customer */}
+      {(order?.orderStatus === 'out_for_delivery' || order?.orderStatus === 'preparing') && socketRef.current && (
+        <ChatBox 
+          orderId={id} 
+          socket={socketRef.current} 
+          currentUserRole="customer" 
+          currentUserId={user?._id} 
+        />
+      )}
     </div>
   );
 }

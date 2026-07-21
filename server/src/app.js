@@ -21,6 +21,7 @@ const couponRoutes = require('./routes/couponRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const deliveryRoutes = require('./routes/deliveryRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.use('/api/v1/coupons', couponRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/delivery', deliveryRoutes);
+app.use('/api/v1/chat', chatRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
