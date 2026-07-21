@@ -4,6 +4,7 @@ const Address = require('../models/Address');
 const LoyaltySettings = require('../models/LoyaltySettings');
 const AppError = require('../utils/AppError');
 const { uploadToCloudinary } = require('../utils/cloudinaryUpload');
+const { generateReferralCode } = require('../utils/generateReferralCode');
 
 // @desc   Get my profile
 // @route  GET /api/v1/users/me
@@ -145,7 +146,26 @@ const getLoyaltyPoints = async (req, res, next) => {
 // @route  GET /api/v1/users/referral
 const getReferralInfo = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id);
+    let user = await User.findById(req.user._id);
+    
+    // Auto-generate for old users
+    if (!user.referralCode) {
+      let newReferralCode = generateReferralCode(user.name);
+      let isUnique = false;
+      let attempts = 0;
+      while (!isUnique && attempts < 5) {
+        const codeExists = await User.findOne({ referralCode: newReferralCode });
+        if (codeExists) {
+          newReferralCode = generateReferralCode(user.name);
+          attempts++;
+        } else {
+          isUnique = true;
+        }
+      }
+      user.referralCode = newReferralCode;
+      await user.save({ validateBeforeSave: false });
+    }
+
     const referredUsers = await User.find({ referredBy: req.user._id }).select('_id');
     const referredUserIds = referredUsers.map(u => u._id);
     
