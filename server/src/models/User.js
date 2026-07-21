@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema(
     refreshToken: { type: String, select: false },
     passwordResetToken: { type: String, select: false },
     passwordResetExpires: { type: Date, select: false },
+    loyaltyPoints: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

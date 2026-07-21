@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectAuth, updateUser } from '../redux/slices/authSlice';
-import { useGetMeQuery, useUpdateMeMutation, useGetAddressesQuery, useAddAddressMutation, useDeleteAddressMutation } from '../redux/api/otherApi';
-import { User, Mail, Phone, MapPin, Trash2, Camera } from 'lucide-react';
+import { useGetMeQuery, useGetLoyaltyPointsQuery, useUpdateMeMutation, useGetAddressesQuery, useAddAddressMutation, useDeleteAddressMutation } from '../redux/api/otherApi';
+import { User, Mail, Phone, MapPin, Trash2, Camera, Award } from 'lucide-react';
 import { getInitials } from '../utils';
 import toast from 'react-hot-toast';
 
@@ -11,6 +11,7 @@ export default function ProfilePage() {
   const dispatch = useDispatch();
   
   const { data: addressData } = useGetAddressesQuery();
+  const { data: loyaltyData } = useGetLoyaltyPointsQuery();
   const [updateMe, { isLoading: isUpdating }] = useUpdateMeMutation();
   const [addAddress] = useAddAddressMutation();
   const [deleteAddress] = useDeleteAddressMutation();
@@ -21,6 +22,7 @@ export default function ProfilePage() {
   const [showAddressForm, setShowAddressForm] = useState(false);
 
   const addresses = addressData?.data || [];
+  const loyaltyPoints = loyaltyData?.data?.points || 0;
 
   useEffect(() => {
     if (user) {
@@ -91,6 +93,17 @@ export default function ProfilePage() {
                     </label>
                   </div>
                   <p className="text-sm text-gray-500 mt-2">Click to change photo</p>
+                </div>
+
+                {/* Loyalty Points Badge */}
+                <div className="flex items-center gap-3 p-4 rounded-xl border border-yellow-200 bg-yellow-50 dark:bg-yellow-500/10 dark:border-yellow-500/30 mb-6">
+                  <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-500/20 flex items-center justify-center">
+                    <Award className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Loyalty Points</p>
+                    <p className="text-xl font-bold font-heading text-yellow-600 dark:text-yellow-400">{loyaltyPoints}</p>
+                  </div>
                 </div>
 
                 <div>

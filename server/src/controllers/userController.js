@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Address = require('../models/Address');
+const LoyaltySettings = require('../models/LoyaltySettings');
 const AppError = require('../utils/AppError');
 const { uploadToCloudinary } = require('../utils/cloudinaryUpload');
 
@@ -118,4 +119,25 @@ const deleteAddress = async (req, res, next) => {
   }
 };
 
-module.exports = { getMe, updateMe, changePassword, getAddresses, addAddress, updateAddress, deleteAddress };
+// @desc   Get loyalty points and settings
+// @route  GET /api/v1/users/loyalty-points
+const getLoyaltyPoints = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    let settings = await LoyaltySettings.findOne();
+    if (!settings) settings = await LoyaltySettings.create({});
+
+    res.json({
+      success: true,
+      data: {
+        points: user.loyaltyPoints,
+        redeemRate: settings.redeemRate,
+        minRedeemPoints: settings.minRedeemPoints,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getMe, updateMe, changePassword, getAddresses, addAddress, updateAddress, deleteAddress, getLoyaltyPoints };

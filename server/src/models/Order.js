@@ -45,6 +45,8 @@ const orderSchema = new mongoose.Schema(
         note: String,
       },
     ],
+    pointsEarned: { type: Number, default: 0 },
+    pointsRedeemed: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

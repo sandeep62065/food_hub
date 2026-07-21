@@ -5,7 +5,7 @@ import { MapPin, Plus, CreditCard, ShoppingBag, ChevronRight, Check, Tag, X } fr
 import { useSelector } from 'react-redux';
 import { selectCart } from '../redux/slices/cartSlice';
 import { usePlaceOrderMutation } from '../redux/api/orderApi';
-import { useGetAddressesQuery, useAddAddressMutation } from '../redux/api/otherApi';
+import { useGetAddressesQuery, useAddAddressMutation, useGetLoyaltyPointsQuery } from '../redux/api/otherApi';
 import { useValidateCouponMutation } from '../redux/api/couponApi';
 import { formatCurrency, calculateCartTotals } from '../utils';
 import toast from 'react-hot-toast';
@@ -24,6 +24,8 @@ export default function CheckoutPage() {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discountAmount }
   const [validateCoupon, { isLoading: isValidating }] = useValidateCouponMutation();
+  const [redeemLoyalty, setRedeemLoyalty] = useState(false);
+  const { data: loyaltyData } = useGetLoyaltyPointsQuery();
 
   const addresses = addressData?.data || [];
   const defaultAddress = addresses.find(a => a.isDefault) || addresses[0];
@@ -32,7 +34,12 @@ export default function CheckoutPage() {
 
   const totals = items.length > 0 ? calculateCartTotals(items, restaurant?.deliveryFee || 30) : null;
   const discount = appliedCoupon?.discountAmount || 0;
-  const finalGrandTotal = totals ? totals.grandTotal - discount : 0;
+  
+  const loyalty = loyaltyData?.data || { points: 0, minRedeemPoints: 100, redeemRate: 0.1 };
+  const canRedeem = loyalty.points >= loyalty.minRedeemPoints;
+  const loyaltyDiscount = canRedeem && redeemLoyalty ? loyalty.points * loyalty.redeemRate : 0;
+
+  const finalGrandTotal = totals ? totals.grandTotal - discount - loyaltyDiscount : 0;
 
   if (items.length === 0) {
     return (
@@ -91,6 +98,7 @@ export default function CheckoutPage() {
         },
         paymentMethod,
         ...(appliedCoupon ? { couponCode: appliedCoupon.code } : {}),
+        redeemPoints: redeemLoyalty,
       }).unwrap();
 
       toast.success('Order placed successfully! 🎉', { duration: 4000 });
@@ -256,6 +264,28 @@ export default function CheckoutPage() {
                 )}
               </div>
 
+              {/* Loyalty Points Redemption */}
+              {canRedeem && (
+                <div className="pt-4 border-t border-gray-100 dark:border-dark-600 mt-4">
+                  <label className="flex items-center gap-3 cursor-pointer group p-3 border border-yellow-200 bg-yellow-50 dark:bg-yellow-500/10 dark:border-yellow-500/30 rounded-xl transition-all">
+                    <input 
+                      type="checkbox" 
+                      className="w-5 h-5 text-yellow-500 focus:ring-yellow-500 rounded border-yellow-300 cursor-pointer" 
+                      checked={redeemLoyalty}
+                      onChange={(e) => setRedeemLoyalty(e.target.checked)}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-yellow-800 dark:text-yellow-200">
+                        Redeem {loyalty.points} Loyalty Points
+                      </p>
+                      <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                        Save an extra {formatCurrency(loyalty.points * loyalty.redeemRate)}!
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              )}
+
               {/* Totals */}
               {totals && (
                 <div className="space-y-2 pt-4 border-t border-gray-100 dark:border-dark-600 text-sm">
@@ -270,7 +300,12 @@ export default function CheckoutPage() {
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-green-600 dark:text-green-400 font-medium">
-                      <span>Discount</span><span>−{formatCurrency(discount)}</span>
+                      <span>Coupon Discount</span><span>−{formatCurrency(discount)}</span>
+                    </div>
+                  )}
+                  {loyaltyDiscount > 0 && (
+                    <div className="flex justify-between text-yellow-600 dark:text-yellow-400 font-medium">
+                      <span>Loyalty Discount</span><span>−{formatCurrency(loyaltyDiscount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-bold text-gray-900 dark:text-white text-base pt-2 border-t border-gray-200 dark:border-dark-600">

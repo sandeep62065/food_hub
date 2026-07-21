@@ -1,7 +1,7 @@
 import { Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectAuth } from '../redux/slices/authSlice';
-import { LayoutDashboard, Users, Store, UtensilsCrossed, Tag, ShoppingBag, Ticket, Settings, ChevronRight, Menu, X, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Store, UtensilsCrossed, Tag, ShoppingBag, Ticket, Settings, ChevronRight, Menu, X, LogOut, Award } from 'lucide-react';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { logout } from '../redux/slices/authSlice';
@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { to: '/admin/categories', label: 'Categories', icon: Tag },
   { to: '/admin/orders', label: 'Orders', icon: ShoppingBag },
   { to: '/admin/coupons', label: 'Coupons', icon: Ticket },
+  { to: '/admin/loyalty', label: 'Loyalty Points', icon: Award },
 ];
 
 function Sidebar({ isOpen, onClose }) {

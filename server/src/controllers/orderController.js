@@ -2,6 +2,8 @@ const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Restaurant = require('../models/Restaurant');
 const Coupon = require('../models/Coupon');
+const User = require('../models/User');
+const LoyaltySettings = require('../models/LoyaltySettings');
 const { computeDiscount } = require('./couponController');
 const AppError = require('../utils/AppError');
 const ApiFeatures = require('../utils/ApiFeatures');
@@ -13,7 +15,7 @@ const GST_RATE = 0.05; // 5%
 // @route  POST /api/v1/orders
 const placeOrder = async (req, res, next) => {
   try {
-    const { deliveryAddress, paymentMethod = 'COD', couponCode } = req.body;
+    const { deliveryAddress, paymentMethod = 'COD', couponCode, redeemPoints } = req.body;
 
     const cart = await Cart.findOne({ user: req.user._id }).populate('items.food restaurant');
     if (!cart || cart.items.length === 0) {
@@ -53,6 +55,23 @@ const placeOrder = async (req, res, next) => {
       }
     }
 
+    // --- Loyalty points redemption ---
+    let loyaltyDiscount = 0;
+    let pointsRedeemed = 0;
+    
+    if (redeemPoints) {
+      let settings = await LoyaltySettings.findOne();
+      if (!settings) settings = await LoyaltySettings.create({});
+
+      const userDoc = await User.findById(req.user._id);
+      if (userDoc && userDoc.loyaltyPoints >= settings.minRedeemPoints) {
+        loyaltyDiscount = userDoc.loyaltyPoints * settings.redeemRate;
+        pointsRedeemed = userDoc.loyaltyPoints;
+      }
+    }
+
+    discount += loyaltyDiscount;
+
     const grandTotal = subtotal + deliveryFee + gst - discount;
 
     const order = await Order.create({
@@ -64,6 +83,7 @@ const placeOrder = async (req, res, next) => {
       deliveryFee,
       gst,
       discount,
+      pointsRedeemed,
       grandTotal,
       paymentMethod,
       paymentStatus: paymentMethod === 'COD' ? 'pending' : 'pending',
@@ -74,6 +94,11 @@ const placeOrder = async (req, res, next) => {
     // Increment coupon usedCount after order is created
     if (appliedCoupon) {
       await Coupon.findByIdAndUpdate(appliedCoupon._id, { $inc: { usedCount: 1 } });
+    }
+
+    // Deduct loyalty points after order is created
+    if (pointsRedeemed > 0) {
+      await User.findByIdAndUpdate(req.user._id, { $inc: { loyaltyPoints: -pointsRedeemed } });
     }
 
     // Clear cart
@@ -187,7 +212,21 @@ const updateOrderStatus = async (req, res, next) => {
     }
 
     order.orderStatus = status;
-    if (status === 'delivered') order.paymentStatus = 'paid';
+    if (status === 'delivered') {
+      order.paymentStatus = 'paid';
+      
+      // Calculate and award points
+      if (order.pointsEarned === 0) { // prevent double awarding
+        let settings = await LoyaltySettings.findOne();
+        if (!settings) settings = await LoyaltySettings.create({});
+        
+        const earned = Math.floor(order.subtotal * settings.pointsPerRupee);
+        if (earned > 0) {
+           await User.findByIdAndUpdate(order.user, { $inc: { loyaltyPoints: earned } });
+           order.pointsEarned = earned;
+        }
+      }
+    }
     order.statusHistory.push({ status, timestamp: new Date(), note });
     await order.save();
 

@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Star, Leaf, ShoppingCart, ChevronLeft, Minus, Plus, Heart, Clock, Bike, Store } from 'lucide-react';
 import { useGetFoodQuery } from '../redux/api/foodApi';
-import { useAddToCartMutation } from '../redux/api/foodApi';
+import { useAddToCartMutation, useClearCartMutation } from '../redux/api/foodApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectIsAuthenticated } from '../redux/slices/authSlice';
 import { openDrawer } from '../redux/slices/cartSlice';
@@ -17,6 +17,7 @@ export default function FoodDetailPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const { data, isLoading, error } = useGetFoodQuery(id);
   const [addToCart, { isLoading: isAdding }] = useAddToCartMutation();
+  const [clearCart] = useClearCartMutation();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -62,11 +63,37 @@ export default function FoodDetailPage() {
     }
     try {
       await addToCart({ foodId: id, quantity }).unwrap();
-      dispatch(openDrawer());
       toast.success(`${name} added to cart!`);
     } catch (err) {
       if (err.data?.conflict) {
-        toast.error(err.data.message, { duration: 5000 });
+        toast((t) => (
+          <div>
+            <p className="font-medium text-sm text-gray-900">{err.data.message}</p>
+            <div className="mt-3 flex gap-2">
+              <button
+                className="btn-primary text-xs px-3 py-1.5 bg-red-500 hover:bg-red-600 border-none shadow-sm"
+                onClick={async () => {
+                  toast.dismiss(t.id);
+                  try {
+                    await clearCart().unwrap();
+                    await addToCart({ foodId: id, quantity }).unwrap();
+                    toast.success(`${name} added to cart!`);
+                  } catch (e) {
+                    toast.error('Failed to add to cart');
+                  }
+                }}
+              >
+                Clear Cart & Add
+              </button>
+              <button
+                className="btn-secondary text-xs px-3 py-1.5"
+                onClick={() => toast.dismiss(t.id)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ), { duration: 10000 });
       } else {
         toast.error(err.data?.message || 'Failed to add to cart');
       }

@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { getMe, updateMe, changePassword, getAddresses, addAddress, updateAddress, deleteAddress } = require('../controllers/userController');
+const { getMe, updateMe, changePassword, getAddresses, addAddress, updateAddress, deleteAddress, getLoyaltyPoints } = require('../controllers/userController');
 const { protect } = require('../middlewares/auth');
 const upload = require('../middlewares/upload');
 
 router.use(protect);
 
 router.get('/me', getMe);
+router.get('/loyalty-points', getLoyaltyPoints);
 router.patch('/me', upload.single('avatar'), updateMe);
 router.patch('/me/password', changePassword);
 

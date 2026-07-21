@@ -27,6 +27,10 @@ export const userApi = apiSlice.injectEndpoints({
       query: () => ({ url: '/users/me' }),
       providesTags: ['User'],
     }),
+    getLoyaltyPoints: builder.query({
+      query: () => ({ url: '/users/loyalty-points' }),
+      providesTags: ['User'],
+    }),
     updateMe: builder.mutation({
       query: (data) => ({ url: '/users/me', method: 'PATCH', data, headers: { 'Content-Type': 'multipart/form-data' } }),
       invalidatesTags: ['User'],
@@ -90,5 +94,5 @@ export const adminApi = apiSlice.injectEndpoints({
 });
 
 export const { useGetCategoriesQuery, useCreateCategoryMutation, useUpdateCategoryMutation, useDeleteCategoryMutation } = categoryApi;
-export const { useGetMeQuery, useUpdateMeMutation, useChangePasswordMutation, useGetAddressesQuery, useAddAddressMutation, useUpdateAddressMutation, useDeleteAddressMutation } = userApi;
+export const { useGetMeQuery, useGetLoyaltyPointsQuery, useUpdateMeMutation, useChangePasswordMutation, useGetAddressesQuery, useAddAddressMutation, useUpdateAddressMutation, useDeleteAddressMutation } = userApi;
 export const { useGetAdminStatsQuery, useGetAdminUsersQuery, useToggleBanMutation, useGetAdminRestaurantsQuery, useUpdateRestaurantApprovalMutation, useDeleteRestaurantMutation, useGetAdminOrdersQuery, useGetAdminFoodsQuery } = adminApi;

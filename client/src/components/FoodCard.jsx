@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Minus, Star, Leaf, Heart } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { openDrawer } from '../redux/slices/cartSlice';
+import { openDrawer, selectCart } from '../redux/slices/cartSlice';
 import { selectIsAuthenticated, selectAuth } from '../redux/slices/authSlice';
-import { useAddToCartMutation } from '../redux/api/foodApi';
+import { useAddToCartMutation, useUpdateCartItemMutation, useRemoveCartItemMutation, useClearCartMutation } from '../redux/api/foodApi';
 import { useGetWishlistQuery, useAddToWishlistMutation, useRemoveFromWishlistMutation } from '../redux/api/wishlistApi';
 import { formatCurrency } from '../utils';
 import { Link, useNavigate } from 'react-router-dom';
@@ -19,10 +19,20 @@ function FoodCard({ food, index = 0 }) {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const { user } = useSelector(selectAuth);
   const isCustomer = isAuthenticated && user?.role === 'customer';
+  
+  const { items } = useSelector(selectCart);
+  const cartItem = items?.find(i => (i.food?._id || i.food) === _id);
+
   const [addToCart] = useAddToCartMutation();
+  const [updateCartItem, { isLoading: isUpdating }] = useUpdateCartItemMutation();
+  const [removeCartItem, { isLoading: isRemoving }] = useRemoveCartItemMutation();
+  const [clearCart] = useClearCartMutation();
+  
   const { data: wishlistData } = useGetWishlistQuery(undefined, { skip: !isCustomer });
   const [addToWishlist] = useAddToWishlistMutation();
   const [removeFromWishlist] = useRemoveFromWishlistMutation();
+
+  const isProcessing = isAdding || isUpdating || isRemoving;
 
   const isWishlisted = wishlistData?.data?.foods?.some((f) => (f._id || f) === _id) ?? false;
 
@@ -41,16 +51,60 @@ function FoodCard({ food, index = 0 }) {
     setIsAdding(true);
     try {
       const result = await addToCart({ foodId: _id, quantity: 1 }).unwrap();
-      dispatch(openDrawer());
       toast.success(`${name} added to cart!`);
     } catch (err) {
       if (err.data?.conflict) {
-        toast.error(err.data.message, { duration: 5000 });
+        toast((t) => (
+          <div>
+            <p className="font-medium text-sm text-gray-900">{err.data.message}</p>
+            <div className="mt-3 flex gap-2">
+              <button
+                className="btn-primary text-xs px-3 py-1.5 bg-red-500 hover:bg-red-600 border-none shadow-sm"
+                onClick={async () => {
+                  toast.dismiss(t.id);
+                  setIsAdding(true);
+                  try {
+                    await clearCart().unwrap();
+                    await addToCart({ foodId: _id, quantity: 1 }).unwrap();
+                    toast.success(`${name} added to cart!`);
+                  } catch (e) {
+                    toast.error('Failed to add to cart');
+                  } finally {
+                    setIsAdding(false);
+                  }
+                }}
+              >
+                Clear Cart & Add
+              </button>
+              <button
+                className="btn-secondary text-xs px-3 py-1.5"
+                onClick={() => toast.dismiss(t.id)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ), { duration: 10000 });
       } else {
         toast.error(err.data?.message || 'Failed to add to cart');
       }
     } finally {
       setIsAdding(false);
+    }
+  };
+
+  const handleUpdateQuantity = async (e, newQuantity) => {
+    e.preventDefault();
+    if (!cartItem) return;
+    try {
+      if (newQuantity === 0) {
+        await removeCartItem(cartItem._id).unwrap();
+        toast.success(`${name} removed from cart`);
+      } else {
+        await updateCartItem({ itemId: cartItem._id, quantity: newQuantity }).unwrap();
+      }
+    } catch (err) {
+      toast.error(err.data?.message || 'Failed to update quantity');
     }
   };
 
@@ -158,18 +212,43 @@ function FoodCard({ food, index = 0 }) {
                 <span className="ml-1.5 text-sm text-gray-400 line-through">{formatCurrency(price)}</span>
               )}
             </div>
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={handleAddToCart}
-              disabled={!isAvailable || isAdding}
-              className="w-9 h-9 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl flex items-center justify-center transition-all duration-200 hover:shadow-glow"
-            >
-              {isAdding ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Plus className="w-4 h-4" />
-              )}
-            </motion.button>
+
+            {cartItem ? (
+              <div className="flex items-center gap-2 bg-primary-50 dark:bg-primary-500/10 rounded-xl p-1 border border-primary-100 dark:border-primary-900/30">
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => handleUpdateQuantity(e, cartItem.quantity - 1)}
+                  disabled={isProcessing}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-primary-600 hover:bg-white dark:hover:bg-dark-600 disabled:opacity-50"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </motion.button>
+                <span className="w-4 text-center font-bold text-sm text-primary-700 dark:text-primary-300">
+                  {isProcessing ? <div className="w-3 h-3 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto" /> : cartItem.quantity}
+                </span>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => handleUpdateQuantity(e, cartItem.quantity + 1)}
+                  disabled={isProcessing}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-primary-600 hover:bg-white dark:hover:bg-dark-600 disabled:opacity-50"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </motion.button>
+              </div>
+            ) : (
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={handleAddToCart}
+                disabled={!isAvailable || isProcessing}
+                className="w-9 h-9 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl flex items-center justify-center transition-all duration-200 hover:shadow-glow"
+              >
+                {isProcessing ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )}
+              </motion.button>
+            )}
           </div>
         </div>
       </Link>
