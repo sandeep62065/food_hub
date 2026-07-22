@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { selectCart } from '../redux/slices/cartSlice';
 import { usePlaceOrderMutation } from '../redux/api/orderApi';
 import { useGetAddressesQuery, useAddAddressMutation, useGetLoyaltyPointsQuery } from '../redux/api/otherApi';
+import { useCreateRazorpayOrderMutation, useVerifyRazorpayPaymentMutation } from '../redux/api/paymentApi';
 import { useValidateCouponMutation } from '../redux/api/couponApi';
 import { formatCurrency, calculateCartTotals } from '../utils';
 import toast from 'react-hot-toast';
@@ -18,7 +19,7 @@ export default function CheckoutPage() {
   const [addAddress] = useAddAddressMutation();
 
   const [selectedAddressId, setSelectedAddressId] = useState(null);
-  const [paymentMethod] = useState('COD');
+  const [paymentMethod, setPaymentMethod] = useState('COD');
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [newAddress, setNewAddress] = useState({ label: 'Home', street: '', city: '', state: '', pincode: '' });
   const [couponCode, setCouponCode] = useState('');
@@ -26,6 +27,18 @@ export default function CheckoutPage() {
   const [validateCoupon, { isLoading: isValidating }] = useValidateCouponMutation();
   const [redeemLoyalty, setRedeemLoyalty] = useState(false);
   const { data: loyaltyData } = useGetLoyaltyPointsQuery();
+  const [createRazorpayOrder] = useCreateRazorpayOrderMutation();
+  const [verifyRazorpayPayment] = useVerifyRazorpayPaymentMutation();
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
 
   const addresses = addressData?.data || [];
   const defaultAddress = addresses.find(a => a.isDefault) || addresses[0];
@@ -88,7 +101,7 @@ export default function CheckoutPage() {
     if (!activeAddress) return toast.error('Please select a delivery address');
 
     try {
-      await placeOrder({
+      const orderRes = await placeOrder({
         deliveryAddress: {
           label: activeAddress.label,
           street: activeAddress.street,
@@ -100,6 +113,58 @@ export default function CheckoutPage() {
         ...(appliedCoupon ? { couponCode: appliedCoupon.code } : {}),
         redeemPoints: redeemLoyalty,
       }).unwrap();
+
+      const orderId = orderRes.data._id;
+      const amount = orderRes.data.grandTotal;
+
+      if (paymentMethod === 'Razorpay') {
+        const isLoaded = await loadRazorpayScript();
+        if (!isLoaded) {
+          toast.error('Failed to load Razorpay SDK');
+          navigate('/orders');
+          return;
+        }
+
+        const rzpOrder = await createRazorpayOrder({ amount, receipt: orderId }).unwrap();
+        
+        const options = {
+          key: rzpOrder.data.key,
+          amount: rzpOrder.data.amount,
+          currency: rzpOrder.data.currency,
+          name: 'FoodieHub',
+          description: 'Order Payment',
+          order_id: rzpOrder.data.razorpayOrderId,
+          handler: async function (response) {
+            try {
+              await verifyRazorpayPayment({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                orderId: orderId,
+              }).unwrap();
+
+              toast.success('Payment successful! 🎉', { duration: 4000 });
+              navigate('/orders');
+            } catch (err) {
+              toast.error(err.data?.message || 'Payment verification failed');
+              navigate('/orders');
+            }
+          },
+          prefill: {
+            name: 'Customer',
+            email: 'customer@example.com',
+          },
+          theme: { color: '#f97316' },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+          toast.error('Payment failed: ' + response.error.description);
+          navigate('/orders');
+        });
+        rzp.open();
+        return;
+      }
 
       toast.success('Order placed successfully! 🎉', { duration: 4000 });
       navigate('/orders');
@@ -191,14 +256,42 @@ export default function CheckoutPage() {
                 <CreditCard className="w-5 h-5 text-primary-500" />
                 Payment Method
               </h2>
-              <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-primary-500 bg-primary-50 dark:bg-primary-500/10">
-                <div className="w-5 h-5 rounded-full border-2 border-primary-500 bg-primary-500 flex items-center justify-center">
-                  <Check className="w-3 h-3 text-white" />
+              
+              <div className="space-y-3">
+                <div 
+                  onClick={() => setPaymentMethod('COD')}
+                  className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    paymentMethod === 'COD' 
+                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10' 
+                      : 'border-gray-200 dark:border-dark-600 hover:border-primary-300'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${paymentMethod === 'COD' ? 'border-primary-500 bg-primary-500' : 'border-gray-300'}`}>
+                    {paymentMethod === 'COD' && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <div className="text-3xl mr-2">💵</div>
+                  <div>
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm">Cash on Delivery</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Pay when your order arrives</p>
+                  </div>
                 </div>
-                <div className="text-4xl">💵</div>
-                <div>
-                  <p className="font-semibold text-gray-900 dark:text-white text-sm">Cash on Delivery</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Pay when your order arrives</p>
+
+                <div 
+                  onClick={() => setPaymentMethod('Razorpay')}
+                  className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    paymentMethod === 'Razorpay' 
+                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10' 
+                      : 'border-gray-200 dark:border-dark-600 hover:border-primary-300'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${paymentMethod === 'Razorpay' ? 'border-primary-500 bg-primary-500' : 'border-gray-300'}`}>
+                    {paymentMethod === 'Razorpay' && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <div className="text-3xl mr-2">💳</div>
+                  <div>
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm">Card/UPI/Wallet via Razorpay</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Pay securely online</p>
+                  </div>
                 </div>
               </div>
             </div>
