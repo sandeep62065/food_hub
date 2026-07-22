@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const AppError = require('../utils/AppError');
 const {
@@ -83,6 +84,61 @@ const login = async (req, res, next) => {
     const user = await User.findOne({ email }).select('+password +refreshToken');
     if (!user || !(await user.comparePassword(password))) {
       return next(new AppError('Invalid email or password', 401));
+    }
+
+    if (user.isBanned) {
+      return next(new AppError('Your account has been banned. Contact support.', 403));
+    }
+
+    const accessToken = generateAccessToken(user._id, user.role);
+    const refreshToken = generateRefreshToken(user._id);
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    sendRefreshCookie(res, refreshToken);
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        accessToken,
+        user: { _id: user._id, name: user.name, email: user.email, role: user.role, avatarUrl: user.avatarUrl, phone: user.phone },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc   Google Login
+// @route  POST /api/v1/auth/google
+const googleLogin = async (req, res, next) => {
+  try {
+    const { idToken } = req.body;
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
+
+    let user = await User.findOne({ googleId });
+    if (!user) {
+      user = await User.findOne({ email });
+      if (user) {
+        user.googleId = googleId;
+        await user.save({ validateBeforeSave: false });
+      } else {
+        user = await User.create({
+          authProvider: 'google',
+          googleId,
+          name,
+          email,
+          role: 'customer',
+        });
+      }
     }
 
     if (user.isBanned) {
@@ -222,4 +278,4 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, logout, refresh, forgotPassword, resetPassword };
+module.exports = { register, login, googleLogin, logout, refresh, forgotPassword, resetPassword };

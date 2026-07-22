@@ -7,7 +7,8 @@ import { motion } from 'framer-motion';
 import { UtensilsCrossed, User, Mail, Lock, Phone, Eye, EyeOff, ArrowRight, ChefHat, Bike } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCredentials, selectIsAuthenticated } from '../redux/slices/authSlice';
-import { useRegisterMutation } from '../redux/api/authApi';
+import { useRegisterMutation, useGoogleLoginMutation } from '../redux/api/authApi';
+import { GoogleLogin } from '@react-oauth/google';
 import toast from 'react-hot-toast';
 import { getErrorMessage } from '../utils';
 
@@ -30,6 +31,22 @@ export default function RegisterPage() {
   const [searchParams] = useSearchParams();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const [register, { isLoading }] = useRegisterMutation();
+  const [googleLoginMutation, { isLoading: isGoogleLoading }] = useGoogleLoginMutation();
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const result = await googleLoginMutation({ idToken: credentialResponse.credential }).unwrap();
+      dispatch(setCredentials({ user: result.data.user, accessToken: result.data.accessToken }));
+      toast.success(`Welcome to FoodieHub, ${result.data.user.name.split(' ')[0]}! 🎉`);
+      
+      const role = result.data.user.role;
+      if (role === 'owner') navigate('/owner/dashboard');
+      else if (role === 'delivery_partner') navigate('/delivery/dashboard');
+      else navigate('/');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
 
   const { register: reg, handleSubmit, watch, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
@@ -154,7 +171,7 @@ export default function RegisterPage() {
               {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
             </div>
 
-            <button type="submit" disabled={isLoading} className="btn-primary w-full py-3 mt-2">
+            <button type="submit" disabled={isLoading || isGoogleLoading} className="btn-primary w-full py-3 mt-2">
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
@@ -162,6 +179,24 @@ export default function RegisterPage() {
               )}
             </button>
           </form>
+
+          <div className="mt-6 flex items-center justify-center space-x-2">
+            <span className="h-px bg-gray-200 dark:bg-dark-700 w-full"></span>
+            <span className="text-sm text-gray-400 font-medium">OR</span>
+            <span className="h-px bg-gray-200 dark:bg-dark-700 w-full"></span>
+          </div>
+          
+          <div className="mt-6 flex justify-center w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => toast.error('Google Login Failed')}
+              theme="outline"
+              size="large"
+              shape="rectangular"
+              text="signup_with"
+              width="100%"
+            />
+          </div>
 
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
             Already have an account?{' '}

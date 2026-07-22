@@ -8,8 +8,9 @@ import { UtensilsCrossed, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-rea
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCredentials, selectIsAuthenticated } from '../redux/slices/authSlice';
-import { useLoginMutation } from '../redux/api/authApi';
+import { useLoginMutation, useGoogleLoginMutation } from '../redux/api/authApi';
 import { useGetCartQuery } from '../redux/api/foodApi';
+import { GoogleLogin } from '@react-oauth/google';
 import toast from 'react-hot-toast';
 import { getErrorMessage } from '../utils';
 
@@ -24,6 +25,22 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const [login, { isLoading }] = useLoginMutation();
+  const [googleLoginMutation, { isLoading: isGoogleLoading }] = useGoogleLoginMutation();
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const result = await googleLoginMutation({ idToken: credentialResponse.credential }).unwrap();
+      dispatch(setCredentials({ user: result.data.user, accessToken: result.data.accessToken }));
+      toast.success(`Welcome back, ${result.data.user.name.split(' ')[0]}! 👋`);
+
+      const role = result.data.user.role;
+      if (role === 'admin') navigate('/admin/dashboard');
+      else if (role === 'owner') navigate('/owner/dashboard');
+      else navigate('/');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
@@ -106,7 +123,7 @@ export default function LoginPage() {
               {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
             </div>
 
-            <button type="submit" disabled={isLoading} className="btn-primary w-full py-3">
+            <button type="submit" disabled={isLoading || isGoogleLoading} className="btn-primary w-full py-3">
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
@@ -114,6 +131,24 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          <div className="mt-6 flex items-center justify-center space-x-2">
+            <span className="h-px bg-gray-200 dark:bg-dark-700 w-full"></span>
+            <span className="text-sm text-gray-400 font-medium">OR</span>
+            <span className="h-px bg-gray-200 dark:bg-dark-700 w-full"></span>
+          </div>
+          
+          <div className="mt-6 flex justify-center w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => toast.error('Google Login Failed')}
+              theme="outline"
+              size="large"
+              shape="rectangular"
+              text="continue_with"
+              width="100%"
+            />
+          </div>
 
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
             Don't have an account?{' '}
